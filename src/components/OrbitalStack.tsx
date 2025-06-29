@@ -22,7 +22,7 @@ export default function OrbitalStack() {
         {/* Tarjeta Central (Sol) */}
         <motion.div
           whileHover={{ backgroundColor: 'rgba(6,182,212,0.3)' }}
-          className="absolute top-1/2 left-1/2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-3xl w-35 h-19 sm:w-48 sm:h-24 flex items-center justify-center text-center cursor-default select-none z-10"
+          className="absolute top-1/2 left-1/2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-3xl w-28 h-16 sm:w-40 sm:h-20 flex items-center justify-center text-center cursor-default select-none z-10"
           style={{
             // AJUSTE MANUAL DE POSICIÓN DEL SOL:
             // El primer valor (-50% es el centro) controla el eje X (izquierda/derecha).
@@ -42,7 +42,7 @@ export default function OrbitalStack() {
             [angleOffset, angleOffset + 360],
             { clamp: false }
           );
-          const radius = typeof window !== 'undefined' && window.innerWidth < 640 ? 138 : 152;
+          const radius = typeof window !== 'undefined' && window.innerWidth < 640 ? 158 : 172;
           const x = useTransform(rotate, (r) => `${radius * Math.cos(r * Math.PI / 180)}px`);
           const y = useTransform(rotate, (r) => `${radius * Math.sin(r * Math.PI / 180)}px`);
 
@@ -61,7 +61,7 @@ export default function OrbitalStack() {
             >
               <motion.div
                 whileHover={{ scale: 1.1 }}
-                className="w-20 h-24 sm:w-28 sm:h-32 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-1.5 sm:p-3 flex flex-col items-center justify-center text-center"
+                className="w-20 h-24 sm:w-20 sm:h-24 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-1.5 sm:p-3 flex flex-col items-center justify-center text-center"
               >
                 <Image
                   src={skill.imgSrc}

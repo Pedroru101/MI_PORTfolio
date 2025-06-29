@@ -11,7 +11,7 @@ function EarthModel() {
   return (
     <primitive
       object={earth.scene}
-      scale={15} // AJUSTE MANUAL: Aumenta o disminuye este valor para cambiar el tamaño del planeta
+      scale={16} // Incrementamos la escala un 50% para acercar el planeta al espectador
       position-y={0}
       rotation-y={0}
     />
@@ -28,7 +28,7 @@ export default function EarthCanvas() {
         fov: 45,
         near: 0.1,
         far: 1000, // AJUSTE MANUAL: Aumenta este valor si el planeta se recorta al hacerlo muy grande
-        position: [-4, 3, 6],
+        position: [-2, 3, 8], // Alejamos la cámara para mostrar el planeta completo
       }}
     >
       <Suspense fallback={null}> {/* Muestra un fallback mientras carga el modelo */}
