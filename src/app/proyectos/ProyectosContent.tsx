@@ -560,7 +560,7 @@ function ExpandableDescription({ html, collapsed, onToggle, index, toolColor }: 
 
   return (
     <div className="text-gray-300 text-xs md:text-sm">
-      <div className="line-clamp-3 md:line-clamp-none" dangerouslySetInnerHTML={{ __html: firstPart }} />
+      <div className="line-clamp-6 md:line-clamp-none leading-tight md:leading-normal" dangerouslySetInnerHTML={{ __html: firstPart }} />
       <AnimatePresence>
         {!collapsed && (
           <motion.div
@@ -885,17 +885,17 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                 }
                 
                 return (
-                  <div className="py-6 md:py-8" key={`container-${project.title}`}>
+                  <div className="py-4 md:py-6" key={`container-${project.title}`}>
                     <motion.div
                       key={project.title}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 + (index * 0.1), duration: 0.3 }}
                       whileHover={{ y: -5, boxShadow: `0 10px 30px -10px ${toolColor}33` }}
-                      className={`bg-white/5 backdrop-blur-sm border rounded-xl p-4 md:p-6 transition-all border-gray-600 hover:border-gray-500 w-[95%] mx-auto`}
+                      className={`bg-white/5 backdrop-blur-sm border rounded-xl p-3 md:p-5 transition-all border-gray-600 hover:border-gray-500 w-[95%] mx-auto`}
                       style={{ borderColor: mainToolId ? `${toolColor}66` : undefined }}
                     >
-                      <div className="flex flex-col items-center text-center gap-2 mb-3 md:mb-4">
+                      <div className="flex flex-col items-center text-center gap-1 mb-2 md:mb-3">
                         <div className="p-2 bg-gray-500/10 rounded-lg" style={{ backgroundColor: `${toolColor}22` }}>
                           <Image 
                             src={mainTool.imgSrc || "/icons/n8n.png"} 
@@ -905,14 +905,14 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                             className="w-6 h-6 object-cover rounded-md" 
                           />
                         </div>
-                        <h3 className="text-lg md:text-xl font-bold text-white">{project.title}</h3>
+                        <h3 className="text-base md:text-lg font-bold text-white">{project.title}</h3>
                       </div>
                       
                       {/* En móviles: primero galería (arriba) y luego texto (abajo) */}
                       {/* En desktop: texto (75% izquierda) y galería (25% derecha) */}
-                      <div className="flex flex-col-reverse md:flex-row gap-3 md:gap-4">
+                      <div className="flex flex-col-reverse md:flex-row gap-2 md:gap-3">
                         {/* Contenido de texto - 75% */}
-                        <div className="w-full md:w-3/4 mt-3 md:mt-0">
+                        <div className="w-full md:w-3/4 mt-2 md:mt-0">
                           <ExpandableDescription
                             html={project.description}
                             collapsed={collapsedArr[index]}
@@ -924,8 +924,8 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                         
                         {/* Galería de imágenes - 25% */}
                         {project.tags.some(tag => tools.find(t => t.id === tag)?.gallery) && (
-                          <div className="w-full md:w-1/4 min-h-[120px] md:min-h-[200px] flex flex-col">
-                            <h4 className="text-sm font-semibold text-white mb-1 md:mb-2" style={{ color: toolColor }}>Galería</h4>
+                          <div className="w-full md:w-1/4 min-h-[100px] md:min-h-[180px] flex flex-col">
+                            <h4 className="text-xs font-semibold text-white mb-1" style={{ color: toolColor }}>Galería</h4>
                             <div className="flex-grow">
                               <ImageGallery 
                                 images={mainTool.gallery || []} 
@@ -939,7 +939,7 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                       
                       {/* Botón "Ver más detalles" centrado */}
                       {hasExpandableContent && (
-                        <div className="w-full flex justify-center mt-4 mb-3">
+                        <div className="w-full flex justify-center mt-2 mb-2">
                           <button
                             className="px-4 md:px-6 py-1.5 md:py-2.5 rounded-full font-extrabold text-xs md:text-base shadow-lg focus:outline-none tracking-wide scale-90 md:scale-60"
                             style={{
