@@ -120,3 +120,67 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Animación RGB para texto */
+@keyframes text-gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-text-gradient {
+  background-size: 200% 200%;
+  animation: text-gradient-animation 4s ease infinite;
+}
+
+/* Estilos para las animaciones de parpadeo de herramientas */
+@keyframes n8n-blink {
+  0%, 100% { box-shadow: 0 0 8px rgba(136, 102, 255, 0.4); border-color: rgba(136, 102, 255, 0.5); }
+  50% { box-shadow: 0 0 40px rgba(136, 102, 255, 1); border-color: rgba(136, 102, 255, 1); filter: brightness(1.2); }
+}
+
+@keyframes powerbi-blink {
+  0%, 100% { box-shadow: 0 0 8px rgba(242, 200, 17, 0.4); border-color: rgba(242, 200, 17, 0.5); }
+  50% { box-shadow: 0 0 40px rgba(242, 200, 17, 1); border-color: rgba(242, 200, 17, 1); filter: brightness(1.2); }
+}
+
+@keyframes python-blink {
+  0%, 100% { box-shadow: 0 0 8px rgba(55, 118, 171, 0.4); border-color: rgba(55, 118, 171, 0.5); }
+  50% { box-shadow: 0 0 40px rgba(55, 118, 171, 1); border-color: rgba(55, 118, 171, 1); filter: brightness(1.2); }
+}
+
+@keyframes sql-blink {
+  0%, 100% { box-shadow: 0 0 8px rgba(204, 41, 39, 0.4); border-color: rgba(204, 41, 39, 0.5); }
+  50% { box-shadow: 0 0 40px rgba(204, 41, 39, 1); border-color: rgba(204, 41, 39, 1); filter: brightness(1.2); }
+}
+
+@keyframes sheets-blink {
+  0%, 100% { box-shadow: 0 0 8px rgba(15, 157, 88, 0.4); border-color: rgba(15, 157, 88, 0.5); }
+  50% { box-shadow: 0 0 40px rgba(15, 157, 88, 1); border-color: rgba(15, 157, 88, 1); filter: brightness(1.2); }
+}
+
+#tool-n8n.tool-blink {
+  animation: n8n-blink 1s ease-in-out infinite;
+}
+
+#tool-powerbi.tool-blink {
+  animation: powerbi-blink 1s ease-in-out infinite;
+}
+
+#tool-python.tool-blink {
+  animation: python-blink 1s ease-in-out infinite;
+}
+
+#tool-sql.tool-blink {
+  animation: sql-blink 1s ease-in-out infinite;
+}
+
+#tool-sheets.tool-blink {
+  animation: sheets-blink 1s ease-in-out infinite;
+}
