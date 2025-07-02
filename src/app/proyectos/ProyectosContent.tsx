@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, TargetAndTransition } from "framer-motion";
 import React, { useState, useRef, useEffect } from "react";
 import Image from 'next/image';
 import Link from 'next/link';
@@ -17,10 +17,13 @@ const tools = [
     description: "Plataforma de automatización de flujos de trabajo que conecta diferentes aplicaciones y servicios sin necesidad de código.",
     imgSrc: "/icons/n8n.png",
     gallery: [
-      { title: "Workflow de Monitoreo", src: "/icons/n8n.png" },
-      { title: "Integración con APIs", src: "/icons/n8n.png" },
-      { title: "Automatización Email", src: "/icons/n8n.png" },
-      { title: "Dashboard de Control", src: "/icons/n8n.png" }
+      { title: "Arquitectura y Desafíos Técnicos", src: "/projects/n8n/monitoreo-medios/arquitectura+desafios.png" },
+      { title: "Vista General del Workflow", src: "/projects/n8n/monitoreo-medios/flujo-principal.png" },
+      { title: "Procesamiento Inicial de Noticias", src: "/projects/n8n/monitoreo-medios/procesamiento-noticias.png" },
+      { title: "Vectorización con Ollama Local", src: "/projects/n8n/monitoreo-medios/Vectorizacion-noticias-ollama-local.png" },
+      { title: "Análisis Semántico con IA", src: "/projects/n8n/monitoreo-medios/analisis-ia.png" },
+      { title: "Generación del Informe", src: "/projects/n8n/monitoreo-medios/generacion-informe.png" },
+      { title: "Ejemplo de Alerta Final", src: "/projects/n8n/monitoreo-medios/ejemplo-alerta.png" }
     ]
   },
   { 
@@ -69,10 +72,14 @@ const tools = [
     description: "Hojas de cálculo colaborativas con automatización para gestión de datos y reportes en tiempo real.",
     imgSrc: "/icons/google-sheets.png",
     gallery: [
-      { title: "Dashboards Dinámicos", src: "/icons/google-sheets.png" },
-      { title: "Automatización con Apps Script", src: "/icons/google-sheets.png" },
-      { title: "Integración con APIs", src: "/icons/google-sheets.png" },
-      { title: "Reportes Automáticos", src: "/icons/google-sheets.png" }
+      { title: "Dashboard Principal", src: "/projects/sheets/dash.png" },
+      { title: "Informe por Mercado y Región", src: "/projects/sheets/informemercadoyregion.png" },
+      { title: "Informe por Categoría", src: "/projects/sheets/informecategoriasubcat.png" },
+      { title: "Conclusiones", src: "/projects/sheets/conclusion.png" },
+      { title: "Datos Maestros", src: "/projects/sheets/datos.png" },
+      { title: "Tablas Dinámicas", src: "/projects/sheets/tablas_dinamicas.png" },
+      { title: "Página Inicial", src: "/projects/sheets/inicio.png" },
+      { title: "Metodología", src: "/projects/sheets/pasos.png" }
     ]
   }
 ];
@@ -85,6 +92,8 @@ function ImageGallery({ images, toolColor, onLightboxChange }: { images: {title:
   const [isZoomed, setIsZoomed] = useState(false);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [showAllImages, setShowAllImages] = useState(false);
+  const [clickedImageIndex, setClickedImageIndex] = useState<number | null>(null);
   
   // Definir un tipo para dragStart que incluya pinchDistance
   interface DragState {
@@ -107,8 +116,7 @@ function ImageGallery({ images, toolColor, onLightboxChange }: { images: {title:
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (showLightbox && lightboxRef.current && !lightboxRef.current.contains(event.target as Node)) {
-        setShowLightbox(false);
-        resetZoom();
+        closeLightbox();
       }
     };
     
@@ -137,6 +145,62 @@ function ImageGallery({ images, toolColor, onLightboxChange }: { images: {title:
       window.removeEventListener('resize', checkIfMobile);
     };
   }, []);
+ 
+  // Determinar qué imágenes mostrar basado en el estado
+  const visibleImages = showAllImages ? images : images.slice(0, 4);
+  const hasMoreImages = images.length > 4;
+
+  // Toggle para mostrar todas las imágenes
+  const toggleAllImages = () => {
+    setShowAllImages(!showAllImages);
+  };
+
+  const openLightbox = (index: number) => {
+    setClickedImageIndex(index);
+    setCurrentImageIndex(index);
+    
+    // Pequeño retraso para permitir que la animación de clic comience
+    setTimeout(() => {
+      setShowLightbox(true);
+      
+      // Calcular el zoom inicial para que la imagen se ajuste completamente
+      setTimeout(() => {
+        if (imageContainerRef.current && imageRef.current) {
+          const containerRect = imageContainerRef.current.getBoundingClientRect();
+          const imageRect = imageRef.current.getBoundingClientRect();
+          
+          // Calcular las relaciones de aspecto
+          const containerRatio = containerRect.width / containerRect.height;
+          const imageRatio = imageRect.width / imageRect.height;
+          
+          // Calcular el factor de zoom necesario
+          let scale;
+          if (imageRatio > containerRatio) {
+            // La imagen es más ancha que el contenedor
+            scale = (containerRect.width * 0.9) / imageRect.width;
+          } else {
+            // La imagen es más alta que el contenedor
+            scale = (containerRect.height * 0.9) / imageRect.height;
+          }
+          
+          // Aplicar el zoom inicial (convertir a porcentaje)
+          const initialZoom = scale * 100;
+          setZoomLevel(Math.min(initialZoom, 100)); // No hacer zoom in, solo out si es necesario
+          setDragPosition({ x: 0, y: 0 });
+        }
+      }, 50); // Pequeño retraso para asegurar que los elementos están renderizados
+    }, 100);
+  };
+
+  const closeLightbox = () => {
+    setShowLightbox(false);
+    resetZoom();
+    
+    // Pequeño retraso antes de resetear el índice de imagen clickeada
+    setTimeout(() => {
+      setClickedImageIndex(null);
+    }, 300);
+  };
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
@@ -178,25 +242,59 @@ function ImageGallery({ images, toolColor, onLightboxChange }: { images: {title:
   const handleWheel = (e: React.WheelEvent) => {
     if (!isMouseOverContainer(e.clientX, e.clientY)) return;
     
-    e.preventDefault(); // Prevenir el desplazamiento de la página
-    
-    // Ajustar zoom con la rueda del ratón
-    const delta = e.deltaY * -0.01;
-    // Limitar el zoom entre 100% (tamaño original) y 175% (máximo zoom)
-    const newZoom = Math.min(Math.max(zoomLevel + delta * 10, 100), 175);
+    e.preventDefault();
+
+    // Calcular el nuevo nivel de zoom
+    const delta = e.deltaY * -1;
+    const newZoom = Math.min(Math.max(zoomLevel + delta, 50), 400);
+    if (newZoom === zoomLevel) return;
+
+    // Calcular el punto relativo del cursor en el contenedor
+    const rect = imageContainerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const mouseX = e.clientX - rect.left - rect.width / 2;
+    const mouseY = e.clientY - rect.top - rect.height / 2;
+
+    // Ajustar el dragPosition para que el punto bajo el cursor permanezca fijo
+    const scale = newZoom / zoomLevel;
+    const newX = (dragPosition.x - mouseX) * scale + mouseX;
+    const newY = (dragPosition.y - mouseY) * scale + mouseY;
+
     setZoomLevel(newZoom);
-    if (newZoom > 100) {
-      setIsZoomed(true);
-    } else {
-      setIsZoomed(false);
-      setDragPosition({ x: 0, y: 0 });
-    }
+    setIsZoomed(newZoom > 100);
+    setDragPosition({ x: newX, y: newY });
   };
 
   const resetZoom = () => {
-    setZoomLevel(100);
-    setIsZoomed(false);
-    setDragPosition({ x: 0, y: 0 });
+    // Animar el reseteo del zoom para una transición más suave
+    const startZoom = zoomLevel;
+    const startPos = { ...dragPosition };
+    const startTime = performance.now();
+    const duration = 300; // duración de la animación en ms
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Función de easing para una animación más natural
+      const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
+      const easedProgress = easeOutCubic(progress);
+      
+      const currentZoom = startZoom + (100 - startZoom) * easedProgress;
+      const currentX = startPos.x * (1 - easedProgress);
+      const currentY = startPos.y * (1 - easedProgress);
+      
+      setZoomLevel(currentZoom);
+      setDragPosition({ x: currentX, y: currentY });
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+    } else {
+      setIsZoomed(false);
+    }
+  };
+
+    requestAnimationFrame(animate);
   };
 
   const increaseZoom = () => {
@@ -225,8 +323,14 @@ function ImageGallery({ images, toolColor, onLightboxChange }: { images: {title:
     
     // El límite es proporcional al nivel de zoom
     const zoomFactor = zoomLevel / 100;
-    const maxX = Math.max(0, (imageRect.width * zoomFactor - containerRect.width) / (2 * zoomFactor));
-    const maxY = Math.max(0, (imageRect.height * zoomFactor - containerRect.height) / (2 * zoomFactor));
+    
+    // Calcular los límites basados en el tamaño real de la imagen escalada
+    const scaledWidth = imageRect.width * zoomFactor;
+    const scaledHeight = imageRect.height * zoomFactor;
+    
+    // Permitir arrastrar la imagen hasta que sus bordes toquen los bordes del contenedor
+    const maxX = Math.max(0, (scaledWidth - containerRect.width) / 2);
+    const maxY = Math.max(0, (scaledHeight - containerRect.height) / 2);
     
     return { maxX, maxY };
   };
@@ -249,9 +353,16 @@ function ImageGallery({ images, toolColor, onLightboxChange }: { images: {title:
       // Calcular límites de arrastre
       const { maxX, maxY } = calculateDragLimits();
       
-      // Limitar el arrastre para que la imagen no se salga completamente de la vista
-      const clampedX = Math.max(Math.min(newX, maxX), -maxX);
-      const clampedY = Math.max(Math.min(newY, maxY), -maxY);
+      // Aplicar límites con efecto de "rubber band" para un arrastre más suave
+      const applyRubberBand = (value: number, limit: number) => {
+        if (Math.abs(value) <= limit) return value;
+        const overflow = Math.abs(value) - limit;
+        const direction = value > 0 ? 1 : -1;
+        return direction * (limit + overflow * 0.5);
+      };
+      
+      const clampedX = applyRubberBand(newX, maxX);
+      const clampedY = applyRubberBand(newY, maxY);
       
       setDragPosition({ x: clampedX, y: clampedY });
       e.preventDefault(); // Prevenir selección de texto durante el arrastre
@@ -352,15 +463,25 @@ function ImageGallery({ images, toolColor, onLightboxChange }: { images: {title:
       if (isMouseOverContainer(e.clientX, e.clientY)) {
         e.preventDefault(); // Prevenir el desplazamiento de la página
         
+        // Calcular el punto relativo del cursor en la imagen
+        const rect = imageContainerRef.current.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
         // Ajustar zoom con la rueda del ratón
-        const delta = e.deltaY * -0.01;
-        const newZoom = Math.min(Math.max(zoomLevel + delta * 10, 100), 175);
+        const delta = e.deltaY * -0.002; // Hacer el zoom más sensible
+        const scaleFactor = Math.exp(delta);
+        const newZoom = Math.min(Math.max(zoomLevel * scaleFactor, 50), 400);
+        
+        if (newZoom !== zoomLevel) {
+          // Calcular el nuevo desplazamiento basado en el punto del cursor
+          const scaleChange = newZoom / zoomLevel;
+          const newX = dragPosition.x * scaleChange + (mouseX - mouseX * scaleChange);
+          const newY = dragPosition.y * scaleChange + (mouseY - mouseY * scaleChange);
+          
         setZoomLevel(newZoom);
-        if (newZoom > 100) {
-          setIsZoomed(true);
-        } else {
-          setIsZoomed(false);
-          setDragPosition({ x: 0, y: 0 });
+          setDragPosition({ x: newX, y: newY });
+          setIsZoomed(newZoom > 100);
         }
       }
     };
@@ -373,210 +494,226 @@ function ImageGallery({ images, toolColor, onLightboxChange }: { images: {title:
     return () => {
       window.removeEventListener('wheel', handleGlobalWheel);
     };
-  }, [showLightbox, zoomLevel, isZoomed]);
+  }, [showLightbox, zoomLevel, isZoomed, dragPosition]);
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="grid grid-cols-2 gap-1 flex-grow">
-        {images.map((image, idx) => (
-          <div key={idx} className="relative aspect-video bg-gray-800/50 rounded-sm overflow-hidden cursor-pointer group" onClick={() => {
-            setCurrentImageIndex(idx);
-            setShowLightbox(true);
-            resetZoom();
-          }}>
-            <Image 
-              src={image.src} 
-              alt={image.title} 
-              fill 
-              sizes="(max-width: 768px) 100vw, 25vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
+    <>
+      <div className="grid grid-cols-2 gap-1 h-full">
+        {visibleImages.map((image, index) => (
+          <motion.div
+            key={index}
+            initial={index >= 4 ? { opacity: 0, y: 20 } : false}
+            animate={{ 
+              opacity: 1, 
+              y: 0,
+              scale: clickedImageIndex === index && showLightbox ? 0.95 : 1
+            }}
+            transition={{ 
+              duration: 0.3, 
+              delay: index >= 4 ? (index - 4) * 0.1 : 0,
+              scale: { type: "spring", stiffness: 300, damping: 25 }
+            }}
+            className="relative aspect-video cursor-pointer overflow-hidden rounded-md bg-gray-800/50"
+            onClick={() => openLightbox(index)}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            <Image
+              src={image.src}
+              alt={image.title}
+              width={300}
+              height={200}
+              className="h-full w-full object-contain transition-transform duration-300"
+              quality={90}
             />
-            <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-0.5 text-[8px] md:text-[10px] text-white truncate">
-              {image.title}
+            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+              <span className="text-white text-xs font-medium text-center px-1">{image.title}</span>
             </div>
-            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <div className="bg-black/60 rounded-full p-1">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                </svg>
-              </div>
-            </div>
-          </div>
+          </motion.div>
         ))}
       </div>
+      
+      {/* Botón para mostrar más imágenes */}
+      {hasMoreImages && (
+        <motion.div 
+          className="mt-1 text-center text-xs cursor-pointer"
+          style={{ color: toolColor }}
+          onClick={toggleAllImages}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {showAllImages ? "Mostrar menos" : `+${images.length - 4} imágenes`}
+        </motion.div>
+      )}
 
-      {/* Lightbox con funcionalidad de zoom */}
+      {/* Lightbox */}
       {showLightbox && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setShowLightbox(false)}>
-          <div 
-            ref={lightboxRef}
-            className="relative max-w-[95%] max-h-[90vh] w-full" 
+        <motion.div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          ref={lightboxRef}
+          onClick={() => closeLightbox()}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.div 
+            className="relative max-w-[95%] max-h-[90vh] w-full"
             onClick={(e) => e.stopPropagation()}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 25 
+            }}
           >
             <div 
-              ref={imageContainerRef}
-              className="relative bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center"
-              style={{ 
-                width: '100%', 
-                height: '80vh',
-                cursor: isZoomed ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in'
-              }}
-              onDoubleClick={handleDoubleClick}
+              ref={imageContainerRef} 
+              className="relative w-full h-[80vh] flex items-center justify-center overflow-hidden bg-black/50"
+              onWheel={handleWheel}
               onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
+              onMouseMove={isDragging ? handleMouseMove : undefined}
               onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
-              <div 
+              <motion.div 
                 ref={imageRef}
-                className="relative w-full h-full flex items-center justify-center p-4"
+                style={{
+                  cursor: isZoomed ? (isDragging ? 'grabbing' : 'grab') : 'default',
+                  transform: `scale(${zoomLevel / 100}) translate(${dragPosition.x}px, ${dragPosition.y}px)`,
+                  transformOrigin: 'center',
+                  transition: 'transform 0.1s ease-out',
+                }}
+                className="relative"
+                onMouseDown={handleMouseDown}
+                onMouseMove={isDragging ? handleMouseMove : undefined}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
               >
-                <div 
-                  className="transition-transform duration-200"
-                  style={{ 
-                    transform: `scale(${zoomLevel / 100}) translate(${dragPosition.x / (zoomLevel / 100)}px, ${dragPosition.y / (zoomLevel / 100)}px)`,
-                    transformOrigin: 'center center',
-                    maxWidth: '90%',
-                    maxHeight: '90%',
-                    position: 'relative'
+                <Image 
+                  src={images[currentImageIndex].src} 
+                  alt={images[currentImageIndex].title} 
+                  width={1200} 
+                  height={800} 
+                  className="w-auto h-auto max-h-[80vh] transform-gpu"
+                  draggable={false}
+                  onDoubleClick={handleDoubleClick}
+                  quality={100}
+                  priority
+                />
+              </motion.div>
+            </div>
+            
+            {/* Controles del lightbox */}
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+              {/* Botones de zoom */}
+              <button 
+                className="bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                onClick={decreaseZoom}
+              >
+                -
+              </button>
+              <button 
+                className="bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                onClick={resetZoom}
+              >
+                {Math.round(zoomLevel)}%
+              </button>
+              <button 
+                className="bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                onClick={increaseZoom}
+              >
+                +
+              </button>
+            </div>
+            
+            {/* Navegación entre imágenes */}
+            {images.length > 1 && (
+              <>
+                <button 
+                  className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    prevImage();
                   }}
                 >
-                  <Image 
-                    src={images[currentImageIndex].src} 
-                    alt={images[currentImageIndex].title} 
-                    width={1200}
-                    height={800}
-                    sizes="90vw"
-                    className="object-contain"
-                    priority
-                    draggable={false}
-                    style={{
-                      objectFit: 'contain',
-                      maxHeight: '70vh',
-                      width: 'auto',
-                      height: 'auto'
-                    }}
-                  />
-                </div>
-              </div>
-              
-              {/* Instrucciones de uso */}
-              <div className="absolute top-4 left-4 bg-black/70 rounded-lg px-3 py-1 text-white text-xs opacity-70 hidden md:block">
-                <p>Doble clic: Zoom 150% | Rueda: Ajustar zoom | Arrastrar: Mover imagen</p>
-              </div>
+                  ←
+                </button>
+                <button 
+                  className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    nextImage();
+                  }}
+                >
+                  →
+                </button>
+              </>
+            )}
+            
+            {/* Título de la imagen */}
+            <div className="absolute top-4 left-0 right-0 text-center text-white">
+              {images[currentImageIndex].title} ({currentImageIndex + 1}/{images.length})
             </div>
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-              <div className="bg-black/70 rounded-full px-4 py-2 text-white text-sm">
-                {images[currentImageIndex].title} {isZoomed ? `(${Math.round(zoomLevel)}%)` : ''}
-              </div>
-            </div>
-            {/* Botones de zoom */}
-            <div className="absolute bottom-4 right-4 flex space-x-2">
-              <button
-                className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/80 transition-colors text-white"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  decreaseZoom();
-                }}
-              >
-                <span className="text-lg">-</span>
-              </button>
-              <button
-                className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/80 transition-colors text-white"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  resetZoom();
-                }}
-              >
-                <span className="text-xs">100%</span>
-              </button>
-              <button
-                className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/80 transition-colors text-white"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  increaseZoom();
-                }}
-              >
-                <span className="text-lg">+</span>
-              </button>
-            </div>
+            
+            {/* Botón de cierre */}
             <button 
-              className="absolute top-1/2 left-4 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/80 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                prevImage();
-              }}
-              style={{color: toolColor}}
+              className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center"
+              onClick={() => closeLightbox()}
             >
-              <ChevronLeft className="w-6 h-6" />
+              ×
             </button>
-            <button 
-              className="absolute top-1/2 right-4 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/80 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                nextImage();
-              }}
-              style={{color: toolColor}}
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
-            <button 
-              className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowLightbox(false);
-              }}
-            >
-              Volver atrás
-            </button>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
-    </div>
+    </>
   );
 }
 
 function ExpandableDescription({ html, collapsed, onToggle, index, toolColor }: { html: string, collapsed: boolean, onToggle: (index: number) => void, index: number, toolColor: string }) {
-  let firstPart = html;
-  let secondPart = '';
-
-  const splitMarker = "🚧 <b>Retos Técnicos:</b>";
-  const splitIndex = html.indexOf(splitMarker);
-
-  if (splitIndex !== -1) {
-    firstPart = html.substring(0, splitIndex);
-    secondPart = html.substring(splitIndex);
-  } else {
-    // Fallback si no se encuentra el marcador
-    const fallbackMarker = "<br/><br/>";
-    const fallbackIndex = html.indexOf(fallbackMarker);
-    if (fallbackIndex !== -1) {
-        firstPart = html.substring(0, fallbackIndex);
-        secondPart = html.substring(fallbackIndex);
-    }
-  }
-
   return (
     <div className="text-gray-300 text-xs md:text-sm">
-      <div className="line-clamp-6 md:line-clamp-none leading-tight md:leading-normal" dangerouslySetInnerHTML={{ __html: firstPart }} />
-      <AnimatePresence>
-        {!collapsed && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-            style={{ overflow: 'hidden' }}
-          >
-            <div dangerouslySetInnerHTML={{ __html: secondPart }} />
-          </motion.div>
+      <div 
+        className={`${collapsed ? "max-h-[180px] md:max-h-[150px] overflow-hidden relative" : ""} leading-tight md:leading-normal`}
+      >
+        {collapsed && (
+          <motion.div 
+            className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-gray-900/80 to-transparent"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          ></motion.div>
         )}
-      </AnimatePresence>
+        <motion.div 
+          layout
+          transition={{ 
+            layout: { duration: 0.5, ease: "easeInOut" },
+            height: { duration: 0.5, ease: "easeInOut" }
+          }}
+          dangerouslySetInnerHTML={{ __html: html }} 
+        />
+      </div>
       {/* El botón ya no se muestra aquí, se renderiza en el componente padre */}
     </div>
   );
+}
+
+// Función auxiliar para encontrar todas las ocurrencias de una subcadena
+function findAllOccurrences(str: string, subStr: string): number[] {
+  const positions: number[] = [];
+  let pos = str.indexOf(subStr);
+  
+  while (pos !== -1) {
+    positions.push(pos);
+    pos = str.indexOf(subStr, pos + 1);
+  }
+  
+  return positions;
 }
 
 interface Project {
@@ -585,8 +722,37 @@ interface Project {
   tags: string[];
 }
 
+// Añadir esta declaración de tipos en la parte superior del archivo
+// para extender la interfaz DeviceOrientationEvent con el método requestPermission
+declare global {
+  interface DeviceOrientationEventiOS extends DeviceOrientationEvent {
+    requestPermission?: () => Promise<string>;
+  }
+  
+  interface Window { 
+    DeviceOrientationEvent: {
+      prototype: DeviceOrientationEvent;
+      new(type: string, eventInitDict?: DeviceOrientationEventInit): DeviceOrientationEvent;
+      requestPermission?: () => Promise<string>;
+    }
+  }
+}
+
+interface ToolPosition {
+  x: number;
+  y: number;
+  scale: number;
+  opacity: number;
+  zIndex: number;
+}
+
 export default function ProyectosContent() {
   const projects: Project[] = [
+    {
+      title: "DESCIFRANDO LA OPERACIÓN EMPRESARIAL",
+      description: `✨ <b>Necesidad / Problema Inicial:</b><br/>Global Super Store, líder en ventas online internacional, buscaba mejorar la eficiencia de sus operaciones mediante análisis de datos. Como Analista de Datos, lideré este estudio utilizando datos de pedidos online entre 2013-2014, implementando procesos ETL hasta la presentación de resultados mediante un Dashboard interactivo en Google Sheets.<br/><br/>🚧 <b>Retos Técnicos:</b><br/>Debía responder preguntas clave: "¿Cuál es la tendencia de ventas? ¿Existe estacionalidad? ¿Qué productos funcionan mejor?" Para esto, analicé la información disponible, identificando dimensiones (Productos, Regiones) y métricas (Ventas, Costos), utilizando los datasets Master Global Super Store y Products Global Super Store.<br/><br/>⚙️ <b>Solución (Flujo del Proyecto):</b><br/>El proyecto se desarrolló en tres fases principales:<br/><br/><b>1. Preparación de datos:</b> Importé y limpié los datasets, validando datos, corrigiendo valores atípicos y asignando formatos adecuados a cada campo.<br/><br/><b>2. Análisis con fórmulas y tablas dinámicas:</b> Implementé funciones avanzadas (SUMA, PROMEDIO, SI, BUSCARV) y creé tablas dinámicas para analizar ventas por categorías, mercados, regiones y métodos de envío.<br/><br/><b>3. Dashboard interactivo:</b> Desarrollé un panel visual siguiendo el patrón Z, con gráficos dinámicos (barras, líneas y proporciones), segmentadores de datos y botones de navegación, mostrando KPIs clave para la toma de decisiones.<br/><br/>🚀 <b>Resultados y Beneficios:</b><ul><li><b>Análisis Completo:</b> Visión integral de las operaciones comerciales.</li><li><b>Dashboard Interactivo:</b> Herramienta visual para decisiones estratégicas.</li><li><b>Insights Valiosos:</b> Identificación de patrones y tendencias de ventas.</li></ul><br/>🧪 <b>Ejemplo de uso real:</b><br/>El equipo directivo utiliza el dashboard en reuniones trimestrales para filtrar datos por región o categoría, identificar tendencias y tomar decisiones basadas en datos concretos.`,
+      tags: ["sheets", "Google Sheets", "Análisis de Datos", "Dashboard", "ETL", "Tablas Dinámicas", "Fórmulas", "Visualización de Datos"],
+    },
     {
       title: "Visualizando el Rendimiento de Adventure Works Cycles",
       description: `🧩 <b>Necesidad / Problema Inicial:</b><br/>Adventure Works Cycles (AWC) necesitaba un análisis integral de ventas para optimizar su estrategia comercial en Norteamérica, Europa y Asia. El objetivo era transformar datos dispersos en SQL Server en un tablero interactivo que revelara tendencias, rentabilidad y desempeño regional.<br/><br/>🚧 <b>Retos Técnicos:</b><ul><li><b>Limpieza de Datos Multilingües:</b> Eliminación de columnas redundantes en varios idiomas para optimizar el modelo.</li><li><b>Optimización del Modelo Relacional:</b> Creación de relaciones eficientes entre tablas (FactInternetSales, DimProduct, DimCustomer) para análisis multidimensionales.</li><li><b>Generación de Métricas Clave:</b> Cálculo de ingresos, utilidad neta y márgenes usando DAX.</li><li><b>Visualización Efectiva:</b> Diseño de mockups para guiar el desarrollo del tablero, priorizando claridad e interactividad.</li></ul><br/>⚙️ <b>Solución (Flujo del Proyecto):</b><br/>El proyecto comenzó con la extracción de datos desde SQL Server y su transformación en Power BI, eliminando columnas irrelevantes y creando una tabla de calendario con DAX. Se estructuró un esquema en estrella con FactInternetSales como tabla central y se segmentaron los datos por categorías (Bikes, Accessories, Clothing) y regiones (EE.UU., Canadá, Europa). Las visualizaciones incluyeron KPIs generales ($1.98M en ingresos, 8K unidades vendidas), mapas geográficos, análisis de márgenes por región y tablas comparativas de periodos.<br/><br/>🚀 <b>Resultados y Beneficios:</b><ul><li><b>Toma de Decisiones Ágil:</b> Identificación de Bikes como categoría más rentable y Canadá como mercado clave.</li><li><b>Ahorro de Tiempo:</b> Automatización de reportes antes manuales.</li><li><b>Escalabilidad:</b> Modelo adaptable para nuevos mercados o métricas.</li></ul><br/>🧪 <b>Ejemplo de uso real:</b><br/>El equipo de ventas utiliza el tablero para detectar oportunidades (como el margen bruto del 65% en Northwest), optimizar inventario reduciendo stock en subcategorías de baja rotación, y planificar promociones ajustando descuentos en meses con menor ingreso basándose en tendencias históricas.`,
@@ -598,19 +764,14 @@ export default function ProyectosContent() {
       tags: ["n8n", "IA", "Ollama", "API", "Automatización", "Embeddings", "JavaScript", "ngrok", "HTML", "DeepSeek-R1"],
     },
     {
-      title: "Generador Avanzado de Informes de ROI y Clipping de Medios",
-      description: `🧩 <b>Necesidad / Problema Inicial:</b><br/>Una agencia de comunicación necesitaba automatizar por completo la creación de informes de clipping y ROI para sus clientes. El proceso manual era extremadamente lento e implicaba consolidar datos de TV, radio, prensa y medios digitales, calcular métricas financieras (VPE y VC), generar gráficos y presentar todo en un formato profesional, tanto en HTML como en PDF.<br/><br/>🚧 <b>Retos Técnicos:</b><ul><li><b>Orquestación de Datos Compleja:</b> Se requería una autenticación de varios pasos con una API propietaria. El mayor reto fue procesar y enriquecer los datos en paralelo, generando enlaces de visualización únicos y seguros para cada noticia mediante una doble codificación en Base64.</li><li><b>Generación Dinámica de Contenido Visual:</b> El sistema debía crear sobre la marcha no solo un informe HTML complejo, sino también gráficos de barras y tarta. Para ello, se desarrolló un <b>microservicio en Python con Matplotlib, desplegado en Render</b>, que recibe los datos, genera los gráficos y los devuelve como imágenes listas para ser incrustadas en el correo.</li><li><b>Manejo de Múltiples Formatos de Salida:</b> El workflow fue diseñado para entregar el informe en dos formatos distintos: un correo HTML detallado para visualización inmediata y un archivo PDF adjunto para un registro formal, lo que exigió crear dos flujos de salida paralelos.</li><li><b>Cálculos Financieros y Agregación:</b> Toda la lógica para calcular el Valor Publicitario Equivalente (VPE), el Valor de Contenido (VC) y las audiencias se implementó en nodos de código, agregando los totales por tipo de medio y a nivel global de forma precisa.</li></ul><br/>⚙️ <b>Solución (Descripción del Flujo):</b><br/>El workflow se inicia con los parámetros del cliente (ID, fechas). Primero, se autentica en la API de medios y obtiene todas las noticias. Los datos se dividen por tipo de medio (TV, Radio, etc.) y se procesan para generar enlaces seguros. Un nodo central de código agrega toda la información, calcula las métricas de ROI y construye la estructura HTML del informe. Al mismo tiempo, envía los datos agregados al <b>microservicio en Render, que utiliza Python y Matplotlib para generar los gráficos</b> y devolverlos como imágenes. Finalmente, un nodo ensambla el correo electrónico final, incrusta los gráficos en el cuerpo del HTML y lo envía. Una rama paralela puede generar una versión en PDF del mismo informe y adjuntarla a otro correo.<br/><br/>🚀 <b>Resultados y Beneficios:</b><ul><li><b>Automatización Completa (End-to-End):</b> Se eliminó el 99% del trabajo manual, reduciendo el tiempo de entrega de informes de varias horas o días a tan solo unos minutos.</li><li><b>Informes Enriquecidos y Profesionales:</b> La entrega de informes visualmente atractivos, con gráficos y datos precisos, mejoró drásticamente la percepción de valor por parte del cliente.</li><li><b>Cero Errores Humanos:</b> La automatización de los cálculos y la maquetación eliminó por completo los errores humanos, garantizando consistencia y fiabilidad.</li><li><b>Flexibilidad y Escalabilidad:</b> El sistema es capaz de generar informes para cualquier cliente y período con solo cambiar los parámetros de entrada, siendo totalmente escalable.</li></ul><br/>🧪 <b>Ejemplo de uso real:</b><br/>Un gestor de cuentas necesita el informe de impacto mediático del último mes para un cliente corporativo. Ejecuta el workflow, y en menos de 5 minutos, recibe en su bandeja de entrada un correo profesional con tablas de resumen, gráficos de distribución de medios y enlaces directos a cada noticia. Puede reenviar este correo directamente a los directivos del cliente.`, 
-      tags: ["n8n", "API", "Automatización", "JavaScript", "HTML", "ROI", "Reporting", "Gmail", "Python", "PDF", "Chart Generation", "Data Visualization", "Base64", "Clipping", "Matplotlib", "Render"],
-    },
+    title: "SISTEMA INTEGRAL DE CLIPPING Y ROI CON TRIPLE SALIDA (HTML/PDF/PPTX)",
+    description: `🧩 <b>Necesidad / Problema Inicial:</b><br/>Una agencia de comunicación necesitaba automatizar por completo la creación de informes de clipping y ROI para sus clientes, con la capacidad de entregar los resultados en tres formatos distintos simultáneamente: un correo HTML interactivo para análisis rápido, un documento PDF formal para archivo y distribución ejecutiva, y una presentación PPTX automáticamente generada para reuniones y presentaciones.<br/><br/>🚧 <b>Retos Técnicos:</b><ul><li><b>Orquestación de Datos Compleja:</b> Se requería una autenticación de varios pasos con una API propietaria. El mayor reto fue procesar y enriquecer los datos en paralelo, generando enlaces de visualización únicos y seguros para cada noticia mediante una doble codificación en Base64.</li><li><b>Generación Dinámica de Contenido Visual:</b> El sistema debía crear sobre la marcha no solo un informe HTML complejo, sino también gráficos de barras y tarta. Para ello, se desarrolló un <b>microservicio en Python con Matplotlib, desplegado en Render</b>, que recibe los datos, genera los gráficos y los devuelve como imágenes listas para ser incrustadas en el correo.</li><li><b>Gestión de Flujos Paralelos:</b> El workflow fue diseñado para ejecutar y sincronizar tres ramas de salida completamente diferentes (HTML, PDF y PPTX) a partir de un único conjunto de datos procesados, asegurando que todas las entregas fueran consistentes.</li><li><b>Microservicio de Generación PPTX:</b> Se desarrolló un servicio FastAPI en Python, desplegado en Render, que recibe datos JSON y genera presentaciones PowerPoint dinámicas con gráficos, tablas y análisis detallados.</li><li><b>Cálculos Financieros y Agregación:</b> Toda la lógica para calcular el Valor Publicitario Equivalente (VPE), el Valor de Contenido (VC) y las audiencias se implementó en nodos de código, agregando los totales por tipo de medio y a nivel global de forma precisa.</li></ul><br/>⚙️ <b>Solución (Descripción del Flujo):</b><br/>El workflow se inicia con los parámetros del cliente (ID, fechas). Primero, se autentica en la API de medios y obtiene todas las noticias. Los datos se dividen por tipo de medio (TV, Radio, etc.) y se procesan para generar enlaces seguros. Un nodo central de código agrega toda la información, calcula las métricas de ROI y construye la estructura HTML del informe. Al mismo tiempo, envía los datos agregados a dos microservicios en Render: uno que utiliza Python y Matplotlib para generar los gráficos, y otro que genera presentaciones PPTX dinámicas. El flujo se trifurca: la primera rama construye un correo HTML detallado con gráficos incrustados, la segunda genera un PDF, y la tercera produce una presentación PPTX profesional. Cada formato se envía en correos separados, optimizados para diferentes casos de uso.<br/><br/>🚀 <b>Resultados y Beneficios:</b><ul><li><b>Automatización Completa (End-to-End):</b> Se eliminó el 99% del trabajo manual, reduciendo el tiempo de entrega de informes de varias horas o días a tan solo unos minutos.</li><li><b>Informes Enriquecidos y Profesionales:</b> La entrega de informes visualmente atractivos, con gráficos y datos precisos, mejoró drásticamente la percepción de valor por parte del cliente.</li><li><b>Cero Errores Humanos:</b> La automatización de los cálculos y la maquetación eliminó por completo los errores humanos, garantizando consistencia y fiabilidad.</li><li><b>Flexibilidad y Escalabilidad:</b> El sistema es capaz de generar informes para cualquier cliente y período con solo cambiar los parámetros de entrada, siendo totalmente escalable.</li></ul><br/>🧪 <b>Ejemplo de uso real:</b><br/>Un gestor de cuentas necesita el informe de impacto mediático del último mes para un cliente corporativo. Ejecuta el workflow, y en menos de 5 minutos, recibe tres correos: uno con un informe HTML interactivo que incluye gráficos dinámicos y enlaces directos a cada noticia, otro con un PDF formal para archivo, y un tercero con una presentación PowerPoint lista para usar en reuniones ejecutivas. El sistema maneja automáticamente la autenticación, los cálculos de ROI, la generación de gráficos y el formateo triple, todo mientras mantiene enlaces seguros y cifrados para cada pieza de contenido.`,
+    tags: ["n8n", "API", "Automatización", "JavaScript", "HTML", "PDF", "PPTX", "ROI", "Clipping", "Gmail", "Chart Generation", "Python", "Matplotlib", "Render", "Base64", "LangChain", "AI Agent", "FastAPI"],
+  },
     {
-      title: "Sistema Integral de Clipping y ROI con Salida Dual (HTML/PDF)",
-      description: `🧩 <b>Necesidad / Problema Inicial:</b><br/>Un cliente estratégico requería una solución de reporting que no solo automatizara la recolección de datos y el cálculo de ROI, sino que también entregara los resultados en dos formatos distintos simultáneamente: un correo HTML interactivo para análisis rápido y un documento PDF formal para archivo y distribución ejecutiva.<br/><br/>🚧 <b>Retos Técnicos:</b><ul><li><b>Gestión de Flujos Paralelos:</b> El principal desafío fue diseñar un workflow capaz de ejecutar y sincronizar dos ramas de salida completamente diferentes (HTML y PDF) a partir de un único conjunto de datos procesados, asegurando que ambas entregas fueran consistentes.</li><li><b>Generación de Enlaces Seguros y Únicos:</b> Para garantizar la confidencialidad de cada noticia, se implementó un sistema de doble codificación Base64 para generar URLs de visualización únicas y seguras, impidiendo el acceso no autorizado.</li><li><b>Orquestación de Múltiples Servicios:</b> El sistema debía coordinar de forma asíncrona la autenticación con la API de medios, el procesamiento de datos en nodos de código, la generación de gráficos a través del microservicio en Render y el ensamblaje final de dos correos distintos.</li><li><b>Potencial de IA Conversacional:</b> Se incluyó un agente de LangChain (actualmente desactivado) diseñado para permitir la solicitud de informes a través de un bot de Telegram, añadiendo una capa de complejidad en la interpretación de lenguaje natural.</li></ul><br/>⚙️ <b>Solución (Descripción del Flujo):</b><br/>El workflow se inicia, se autentica en la API de medios y obtiene los datos. Procesa cada noticia para generar un enlace seguro mediante doble codificación Base64. Agrega los datos y los envía al microservicio de Python/Matplotlib en Render para crear los gráficos. Un nodo Merge centraliza todos los activos (datos y gráficos). A partir de aquí, el flujo se bifurca: una rama construye un correo HTML detallado con gráficos incrustados y lo envía; la otra rama genera un PDF y lo adjunta a un segundo correo, logrando una entrega dual y simultánea.<br/><br/>🚀 <b>Resultados y Beneficios:</b><ul><li><b>Máxima Eficiencia y Flexibilidad:</b> Se satisface la necesidad del cliente de tener dos formatos de informe (operativo y ejecutivo) con una sola ejecución, ahorrando tiempo y esfuerzo.</li><li><b>Seguridad de Datos Reforzada:</b> La técnica de doble codificación de enlaces protege la integridad y confidencialidad de la información mediática.</li><li><b>Calidad de Entrega Superior:</b> La combinación de un correo HTML interactivo y un PDF profesional elevó la percepción de valor del servicio.</li><li><b>Preparado para el Futuro:</b> La arquitectura con el agente de IA demuestra la capacidad de evolucionar hacia interfaces conversacionales avanzadas.</li></ul><br/>🧪 <b>Ejemplo de uso real:</b><br/>Un director de comunicación solicita el informe trimestral. El sistema se ejecuta y, en minutos, recibe dos correos: uno con el informe HTML que puede explorar y reenviar a su equipo, y otro con el PDF oficial que presenta directamente en la reunión del comité directivo.`,
-      tags: ["n8n", "API", "Automatización", "JavaScript", "HTML", "PDF", "ROI", "Clipping", "Gmail", "Chart Generation", "Python", "Matplotlib", "Render", "Base64", "LangChain", "AI Agent"],
-    },
-    {
-      title: "Generación Automática de Artículos WordPress sobre Licitaciones",
-      description: `🧩 <b>Necesidad / Problema Inicial:</b><br/>Automatizar la generación y publicación de artículos sobre licitaciones públicas en WordPress, extrayendo datos desde APIs oficiales, generando contenido único y evitando repeticiones. El objetivo es mantener actualizado un portal de noticias sin intervención manual, asegurando calidad y diversidad temática.<br/><br/>🚧 <b>Retos Técnicos:</b><ul><li><b>Obtención y Procesamiento de Datos Masivos:</b> La API de licitaciones devuelve cientos de entradas diarias. Se implementó procesamiento por lotes (batch) para evitar cuellos de botella y gestionar eficientemente la memoria.</li><li><b>Generación de Contenido con IA y Memoria Contextual:</b> Para evitar artículos repetidos, se utilizó un modelo de IA (OpenRouter/Gemini) con memoria de contexto, permitiendo que cada artículo generado sea único y relevante, recordando los temas ya tratados.</li><li><b>Automatización de Publicación en WordPress:</b> Se integró la API de WordPress para crear borradores de artículos automáticamente, formateando el contenido en HTML y asignando etiquetas y categorías de forma dinámica.</li><li><b>Gestión de Errores y Reintentos:</b> El workflow incluye lógica de reintentos ante fallos de red o errores de autenticación, asegurando la robustez del proceso.</li></ul><br/>⚙️ <b>Solución (Descripción del Flujo):</b><br/>El flujo comienza consultando la API oficial de licitaciones, filtrando resultados relevantes y dividiéndolos en lotes manejables. Cada lote es procesado por un nodo de IA que, utilizando memoria contextual, redacta artículos originales sobre cada licitación. El contenido generado se formatea en HTML y se publica automáticamente como borrador en WordPress a través de su API, asignando etiquetas según el sector y la región. El sistema registra los IDs de licitaciones ya procesadas para evitar duplicados y realiza reintentos automáticos en caso de error.<br/><br/>🚀 <b>Resultados y Beneficios:</b><ul><li><b>Actualización Continua y Sin Esfuerzo:</b> El portal de noticias se mantiene actualizado en tiempo real sin intervención humana.</li><li><b>Contenido Original y No Redundante:</b> Gracias a la memoria de contexto, se evita la repetición de temas y se mejora la calidad editorial.</li><li><b>Escalabilidad:</b> El sistema puede adaptarse fácilmente a otras fuentes de datos o a diferentes portales WordPress.</li><li><b>Reducción de Errores Manuales:</b> Al automatizar todo el flujo, se eliminan los errores asociados a la gestión manual de contenidos.</li></ul><br/>🧪 <b>Ejemplo de uso real:</b><br/>Un portal de noticias regional activa el workflow para cubrir licitaciones públicas. Cada mañana, el sistema publica automáticamente entre 10 y 20 borradores de artículos, listos para revisión y publicación final, asegurando una cobertura exhaustiva y profesional de oportunidades públicas.`,
-      tags: ["n8n", "API", "Automatización", "WordPress", "HTML", "Batch", "OpenRouter", "Gemini", "IA", "Content Generation", "Memory", "Error Handling"],
+      title: "Pipeline Automatizado de Contenido sobre Licitaciones",
+      description: `🧩 <b>Necesidad / Problema Inicial:</b><br/>Automatizar la generación y publicación de artículos sobre licitaciones públicas en un blog, extrayendo datos desde APIs oficiales, generando contenido único y evitando repeticiones. El objetivo es mantener actualizado un portal de noticias sin intervención manual, asegurando calidad y diversidad temática.<br/><br/>🚧 <b>Retos Técnicos:</b><ul><li><b>Obtención y Procesamiento de Datos Masivos:</b> Integración con API oficial de licitaciones, procesamiento por lotes para eficiencia y memoria.</li><li><b>Generación de Contenido con IA y Memoria Contextual:</b> Uso de modelos LLM (OpenRouter/Gemini) con memoria para evitar repeticiones y mejorar la calidad editorial.</li><li><b>Automatización de Publicación en WordPress:</b> Publicación automática de borradores en el CMS, formateo en HTML y asignación dinámica de etiquetas.</li><li><b>Validación y Enriquecimiento:</b> Validación y enriquecimiento de datos generados por IA, asegurando originalidad y relevancia.</li><li><b>Gestión de Errores y Reintentos:</b> Lógica de reintentos ante fallos de red o autenticación.</li></ul><br/>⚙️ <b>Solución (Descripción del Flujo):</b><br/>El flujo comienza consultando la API oficial de licitaciones, filtrando resultados y dividiéndolos en lotes. Cada lote es procesado por un nodo de IA que redacta artículos originales, formatea en HTML y publica automáticamente como borrador en WordPress, asignando etiquetas según sector y región. Se registra el histórico para evitar duplicados y se realizan reintentos automáticos en caso de error.<br/><br/>🚀 <b>Resultados y Beneficios:</b><ul><li><b>Actualización Continua y Sin Esfuerzo:</b> El portal se mantiene actualizado en tiempo real sin intervención humana.</li><li><b>Contenido Original y No Redundante:</b> Gracias a la memoria de contexto, se evita la repetición de temas y se mejora la calidad editorial.</li><li><b>Escalabilidad:</b> El sistema puede adaptarse fácilmente a otras fuentes de datos o portales.</li><li><b>Reducción de Errores Manuales:</b> Al automatizar todo el flujo, se eliminan los errores asociados a la gestión manual de contenidos.</li></ul><br/>🧪 <b>Ejemplo de uso real:</b><br/>El sistema detecta nuevas licitaciones, genera y publica automáticamente artículos de análisis optimizados para SEO, y los deja listos para revisión y publicación final, asegurando una cobertura exhaustiva y profesional de oportunidades públicas.`,
+      tags: ["n8n", "API", "Automatización", "WordPress", "HTML", "Batch", "OpenRouter", "Gemini", "IA", "Content Generation", "Memory", "Error Handling", "AI Agent", "LLM", "Web Scraping", "CMS"],
     },
     {
       title: "Reporte Diario de Consumo OpenAI vía Gmail",
@@ -647,20 +808,237 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
       description: `🧩 <b>Necesidad / Problema Inicial:</b><br/>Generar contenido de alto valor y de forma constante para un blog especializado en licitaciones públicas. El proceso manual de detectar contratos por vencer, investigar detalles, redactar un análisis y publicarlo en un CMS es lento y repetitivo, limitando la escalabilidad de la estrategia de contenidos.<br/><br/>🚧 <b>Retos Técnicos:</b><br/>Los desafíos incluyeron la integración con una API externa para obtener datos dinámicos de contratos. Fue crucial el diseño de un <i>prompt</i> avanzado para un Agente de IA, instruyéndolo para generar contenido periodístico en un formato estructurado. Se implementó un sistema de memoria para que la IA evitara repetir ideas de artículos anteriores, garantizando originalidad.<br/><br/>⚙️ <b>Solución (Descripción del Flujo):</b><br/>El flujo se inicia automáticamente con un <b>Schedule Trigger</b>. Un nodo <b>HTTP Request</b> consulta una API para obtener contratos por vencer. Un bucle (<b>Loop Over Items</b>) procesa cada contrato. Dentro del bucle, un <b>AI Agent</b> redacta un artículo de análisis. Un nodo <b>Code</b> (JavaScript) valida y enriquece los datos generados. Finalmente, un nodo <b>CMS</b> crea un borrador del artículo, listo para revisión.<br/><br/>🚀 <b>Resultados y Beneficios:</b><br/>Este workflow logra una <b>automatización completa</b> del marketing de contenidos, transformando una tarea de horas en minutos. Esto permite <b>optimización</b> del tiempo, <b>escalabilidad</b> total de la estrategia y <b>reducción de errores</b>, generando un flujo constante de publicaciones SEO-optimizadas.<br/><br/>🧪 <b>Ejemplo de uso real:</b><br/>El workflow se ejecuta de forma autónoma. Detecta que un contrato de un servicio público relevante está por vencer. Automáticamente, el sistema redacta y publica un borrador en el CMS analizando las claves del contrato y las oportunidades para nuevas empresas, sin intervención humana.`,
       tags: ["n8n", "IA Generativa", "Automatización", "Marketing de Contenidos", "CMS", "API"],
     },
-    {
-      title: "Pipeline de Contenido IA para Licitaciones",
-      description: `🧩 <b>Necesidad / Problema Inicial:</b><br/>Mantener un blog actualizado con noticias sobre nuevas licitaciones públicas requiere un esfuerzo manual considerable para buscar, analizar y redactar contenido a diario. Este proceso limita la capacidad de cubrir todas las oportunidades de interés para la audiencia.<br/><br/>🚧 <b>Retos Técnicos:</b><br/>El principal reto fue orquestar un proceso de IA confiable. Esto implicó crear un <i>prompt</i> muy específico para que un modelo de lenguaje genere contenido periodístico y datos estructurados (JSON) de forma consistente, implementar un nodo de código para validar la salida del LLM y usar una memoria conversacional para evitar redundancia y mejorar la calidad de cada artículo.<br/><br/>⚙️ <b>Solución (Descripción del Flujo):</b><br/>El workflow se activa diariamente con un <b>Schedule Trigger</b>. Un nodo <b>HTTP Request</b> consulta una API para obtener las licitaciones publicadas el día anterior. Los resultados se procesan uno a uno en un bucle (<b>SplitInBatches</b>). Para cada licitación, un <b>AI Agent</b>, apoyado en un modelo de lenguaje y una memoria de contexto, redacta un artículo de análisis optimizado para SEO. Un nodo <b>Code</b> limpia la respuesta y, finalmente, el nodo <b>CMS</b> publica el artículo como borrador.<br/><br/>🚀 <b>Resultados y Beneficios:</b><br/>Se automatiza por completo el pipeline de creación de contenido, desde la obtención de datos hasta la publicación. Permite generar múltiples artículos de alta calidad diariamente con cero intervención manual, asegurando un tono y estilo coherentes y fortaleciendo la autoridad del sitio.<br/><br/>🧪 <b>Ejemplo de uso real:</b><br/>El sistema detecta una nueva licitación para servicios de consultoría. De forma autónoma, genera un artículo analizando el presupuesto y plazos, y lo publica como borrador en el blog. El equipo de marketing solo necesita revisarlo y hacer clic en "Publicar".`,
-      tags: ["n8n", "AI Agent", "LLM", "Web Scraping", "API", "Wordpress", "Automatización"],
-    },
   ];
 
-  const [collapsedArr, setCollapsedArr] = useState(Array(projects.length).fill(true));
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  const [collapsedArr, setCollapsedArr] = useState(Array(projects.length).fill(true));
   const [isAnimating, setIsAnimating] = useState(false);
   const [activeImageLightbox, setActiveImageLightbox] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [gyroEnabled, setGyroEnabled] = useState(false);
+  const [gyroValues, setGyroValues] = useState({ beta: 0, gamma: 0 });
   const projectsContainerRef = useRef<HTMLDivElement>(null);
+  const wheelContainerRef = useRef<HTMLDivElement>(null);
   const clickOutsideTimerRef = useRef<NodeJS.Timeout | null>(null);
   const clickCountRef = useRef<number>(0);
+
+  // Detectar si estamos en un dispositivo móvil
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
+
+  // Efecto para manejar el giroscopio en dispositivos móviles
+  useEffect(() => {
+    if (!isMobile || typeof window === 'undefined') return;
+
+    if (window.DeviceOrientationEvent && typeof window.DeviceOrientationEvent.requestPermission === 'function') {
+      const enableGyro = () => {
+        window.DeviceOrientationEvent.requestPermission?.()
+          .then((response: string) => {
+            if (response === 'granted') {
+              setGyroEnabled(true);
+              window.addEventListener('deviceorientation', handleOrientation);
+            }
+          })
+          .catch(console.error);
+      };
+
+      const permissionButton = document.getElementById('gyro-permission');
+      if (permissionButton) {
+        permissionButton.addEventListener('click', enableGyro);
+      }
+    } else if (window.DeviceOrientationEvent) {
+      setGyroEnabled(true);
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation);
+      const permissionButton = document.getElementById('gyro-permission');
+      if (permissionButton) {
+        permissionButton.removeEventListener('click', () => {});
+      }
+    };
+  }, [isMobile]);
+
+  const handleToggle = (index: number) => {
+    setCollapsedArr(prev => {
+      const newArr = [...prev];
+      newArr[index] = !newArr[index];
+      return newArr;
+    });
+  };
+
+  // Calcular las posiciones de las herramientas en círculo para móviles
+  const getToolPosition = (index: number, total: number, selectedIndex: number | null): ToolPosition => {
+    if (!isMobile) return {
+      x: 0,
+      y: 0,
+      scale: 1,
+      opacity: 1,
+      zIndex: 1
+    };
+
+    // Radio reducido para móviles
+    const radius = 85;
+    
+    // Offset para mover todo el conjunto hacia la derecha y abajo
+    const offsetX = 100; // Ajusta este valor para mover más a la derecha (+) o izquierda (-)
+    const offsetY = 60; // Ajusta este valor para mover más abajo (+) o arriba (-)
+    
+    // Si es la herramienta seleccionada, posicionarla abajo
+    if (selectedIndex !== null && index === selectedIndex) {
+      return {
+        x: offsetX,
+        y: radius + offsetY, // Mover más abajo la tarjeta seleccionada
+        scale: 0.9,
+        opacity: 1,
+        zIndex: 30
+      };
+    }
+    
+    // Calcular el ángulo para cada herramienta (distribuidas en semicírculo superior)
+    const angleStep = Math.PI / (total - 1);
+    const angle = angleStep * index;
+    
+    // Calcular posición en el semicírculo y aplicar offset
+    const x = radius * Math.cos(angle) + offsetX;
+    const y = -radius * Math.sin(angle) + offsetY;
+    
+    return {
+      x,
+      y,
+      scale: 0.6,
+      opacity: 0.7,
+      zIndex: 20
+    };
+  };
+
+  // Manejar los eventos de orientación del dispositivo
+  const handleOrientation = (event: DeviceOrientationEvent) => {
+    if (!gyroEnabled || selectedTool) return;
+
+    const beta = event.beta || 0;  // Inclinación frontal (adelante/atrás) [-180, 180]
+    const gamma = event.gamma || 0; // Inclinación lateral (izquierda/derecha) [-90, 90]
+
+    // Limitar los valores para evitar movimientos bruscos
+    const limitedBeta = Math.max(-15, Math.min(15, beta));
+    const limitedGamma = Math.max(-15, Math.min(15, gamma));
+
+    setGyroValues({
+      beta: limitedBeta,
+      gamma: limitedGamma
+    });
+
+    // Aplicar la rotación al contenedor de la ruleta
+    if (wheelContainerRef.current) {
+      wheelContainerRef.current.style.transform = `rotateX(${-limitedBeta * 0.5}deg) rotateY(${limitedGamma * 0.5}deg)`;
+    }
+  };
+
+  // Función para manejar el clic en una tarjeta de herramienta
+  const handleToolClick = (toolId: string) => {
+    if (isAnimating) return;
+    
+    setIsAnimating(true);
+    
+    if (selectedTool === toolId) {
+      setSelectedTool(null);
+      setTimeout(() => {
+        setIsAnimating(false);
+      }, 300);
+    } else {
+      if (selectedTool) {
+        setSelectedTool(null);
+        setTimeout(() => {
+          setSelectedTool(toolId);
+              setIsAnimating(false);
+                }, 300);
+          } else {
+        setSelectedTool(toolId);
+          setTimeout(() => {
+            setIsAnimating(false);
+              }, 300);
+      }
+    }
+  };
+  
+  // Función para centrar la ruleta en una herramienta específica
+  const centerWheelOnTool = (toolId: string) => {
+    if (!isMobile || !wheelContainerRef.current) return;
+    
+    // Encontrar el índice de la herramienta seleccionada
+    const toolIndex = tools.findIndex(tool => tool.id === toolId);
+    if (toolIndex === -1) return;
+    
+    // Calcular el ángulo actual de la herramienta
+    const currentAngle = (360 / tools.length) * toolIndex;
+    
+    // Calcular cuánto necesitamos girar para llevar la herramienta abajo (180 grados)
+    let targetAngle = 180;
+    let rotationNeeded = targetAngle - currentAngle;
+    
+    // Asegurarnos de que siempre giramos en sentido horario (hacia la derecha)
+    while (rotationNeeded < 0) rotationNeeded += 360;
+    
+    // Añadir una vuelta completa extra para efecto visual
+    const totalRotation = rotationNeeded + 360;
+    
+    if (wheelContainerRef.current) {
+      // Animación inicial de preparación
+      wheelContainerRef.current.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
+      wheelContainerRef.current.style.transform = 'scale(0.98)';
+      
+      // Animación principal de giro
+      setTimeout(() => {
+        if (wheelContainerRef.current) {
+          wheelContainerRef.current.style.transition = 'transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
+          wheelContainerRef.current.style.transform = `rotateZ(${totalRotation}deg) scale(1)`;
+          
+          // Efecto de "peso" en la tarjeta seleccionada
+              const selectedElement = document.getElementById(`tool-${toolId}`);
+              if (selectedElement) {
+                setTimeout(() => {
+              selectedElement.classList.add('tool-heavy');
+              
+              // Desplazamiento suave al contenido
+              const projectsElement = document.getElementById('projects-container');
+              if (projectsElement) {
+                projectsElement.scrollIntoView({ 
+                  behavior: 'smooth',
+                  block: 'start'
+                });
+            }
+          }, 1500);
+          }
+        }
+      }, 200);
+    }
+  };
+
+  // Función para actualizar el estado del lightbox
+  const handleLightboxChange = (isOpen: boolean) => {
+    setActiveImageLightbox(isOpen);
+  };
+
+  // Filtrar proyectos según la herramienta seleccionada
+  const filteredProjects = selectedTool 
+    ? projects.filter(project => project.tags.includes(selectedTool)) 
+    : [];
+
+  // Obtener índice de la herramienta seleccionada
+  const selectedToolIndex = selectedTool 
+    ? tools.findIndex(tool => tool.id === selectedTool)
+    : null;
 
   // Efecto para manejar clics fuera de las tarjetas
   useEffect(() => {
@@ -707,99 +1085,10 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
     };
   }, [selectedTool, activeImageLightbox]);
 
-  const handleToggle = (index: number) => {
-    setCollapsedArr(prev => {
-      const newArr = [...prev];
-      newArr[index] = !newArr[index];
-      return newArr;
-    });
-  };
-
-  // Función para manejar el clic en una tarjeta de herramienta
-  const handleToolClick = (toolId: string) => {
-    if (isAnimating) return; // Evitar múltiples clics durante la animación
-    
-    setIsAnimating(true);
-    
-    // Si ya está seleccionada, deseleccionamos
-    if (selectedTool === toolId) {
-      // Primero contraer los proyectos
-      setSelectedTool(null);
-      setTimeout(() => {
-        setIsAnimating(false);
-      }, 500); // Tiempo de la animación de contracción
-    } else {
-      // Si hay una herramienta seleccionada, primero contraemos los proyectos
-      if (selectedTool) {
-        setSelectedTool(null);
-        setTimeout(() => {
-          // Luego seleccionamos la nueva herramienta
-          setSelectedTool(toolId);
-          
-          // Efecto de parpadeo
-          const toolElement = document.getElementById(`tool-${toolId}`);
-          if (toolElement) {
-            toolElement.classList.add('tool-blink');
-            setTimeout(() => {
-              toolElement.classList.remove('tool-blink');
-              setIsAnimating(false);
-            }, 1000);
-          } else {
-            setIsAnimating(false);
-          }
-        }, 500); // Tiempo de la animación de contracción
-      } else {
-        // Si no hay herramienta seleccionada, seleccionamos directamente
-        setSelectedTool(toolId);
-        
-        // Efecto de parpadeo
-        const toolElement = document.getElementById(`tool-${toolId}`);
-        if (toolElement) {
-          toolElement.classList.add('tool-blink');
-          setTimeout(() => {
-            toolElement.classList.remove('tool-blink');
-            setIsAnimating(false);
-          }, 1000);
-        } else {
-          setIsAnimating(false);
-        }
-      }
-    }
-  };
-
-  // Función para actualizar el estado del lightbox
-  const handleLightboxChange = (isOpen: boolean) => {
-    setActiveImageLightbox(isOpen);
-  };
-
-  // Filtrar proyectos según la herramienta seleccionada
-  const filteredProjects = selectedTool 
-    ? projects.filter(project => project.tags.includes(selectedTool)) 
-    : [];
-
   return (
-    <div className="min-h-screen bg-grid-white/[0.03] relative overflow-hidden">
-      {/* Fondo con gradiente y grilla */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-gray-950 via-black to-gray-900">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20"></div>
-      </div>
-      {/* Fondo de partículas animadas */}
+    <div className="relative min-h-screen bg-black">
       <ThreeBackground />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-        {/* Botón de volver */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-8"
-        >
-          <Link href="/" className="inline-flex items-center text-cyan-400 hover:text-cyan-300 transition-colors">
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Volver al inicio
-          </Link>
-        </motion.div>
-
-        {/* Título */}
+      <div className="container mx-auto px-4 py-16 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -810,39 +1099,76 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
             Mis Proyectos
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto text-left leading-relaxed">
-            <span className="text-lg font-bold text-cyan-400">¿Sientes que las tareas repetitivas frenan tu potencial?</span>
+            <span className="text-lg font-bold text-cyan-400">¿Buscas un socio tecnológico que impulse tu crecimiento con IA y automatización?</span>
             <br /><br />
-            Imagina recuperar esas horas. Mis proyectos son la respuesta: automatizaciones inteligentes que actúan como un equipo dedicado, 24/7.
+            Cada uno de estos proyectos demuestra cómo combino n8n, Python, Power BI, Google Sheets y modelos de IA para multiplicar la productividad y la toma de decisiones de equipos que apuestan por el largo plazo.
             <br /><br />
-            <span className="flex items-center mb-1"><span className="text-green-500 mr-3">✓</span><span>Convierto procesos manuales en flujos de trabajo eficientes.</span></span>
-            <span className="flex items-center mb-1"><span className="text-green-500 mr-3">✓</span><span>Libero tu tiempo para que te centres en la estrategia.</span></span>
-            <span className="flex items-center mb-2"><span className="text-green-500 mr-3">✓</span><span>Transformo datos en contenido de valor, automáticamente.</span></span>
+            <span className="flex items-center mb-1"><span className="text-green-500 mr-3">✓</span><span>Diseño flujos end-to-end que ahorran horas y escalan sin fricciones.</span></span>
+            <span className="flex items-center mb-1"><span className="text-green-500 mr-3">✓</span><span>Integro IA generativa y analítica avanzada para acelerar cada proceso.</span></span>
+            <span className="flex items-center mb-2"><span className="text-green-500 mr-3">✓</span><span>Colaboro codo a codo, aprendiendo rápido y alineando tecnología con estrategia.</span></span>
             <br />
-            Descubre a continuación cómo lo hago.
+            Explora los casos y descubre cómo podemos crecer juntos.
           </p>
         </motion.div>
 
-        {/* Tarjetas de herramientas */}
+        {/* Tarjetas de herramientas - Versión móvil (ruleta) y escritorio (normal) */}
         <motion.div
+          ref={wheelContainerRef}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="mb-12"
+          className={`mb-12 ${isMobile ? 'h-[300px] tools-wheel-container' : ''} relative`}
+          style={isMobile && !selectedTool ? {
+            transform: `rotateX(${-gyroValues.beta * 0.5}deg) rotateY(${gyroValues.gamma * 0.5}deg)`
+          } : {}}
         >
-          <div className="flex flex-wrap justify-center gap-4">
-            {tools.map((tool) => (
+          {/* Solo mantener el botón de giroscopio si es necesario */}
+          {isMobile && !gyroEnabled && typeof window !== 'undefined' && 
+           window.DeviceOrientationEvent && 
+           typeof window.DeviceOrientationEvent.requestPermission === 'function' && (
+            <button 
+              id="gyro-permission"
+              className="absolute top-0 right-0 bg-cyan-500 text-white text-xs px-2 py-1 rounded-full z-50"
+            >
+              Habilitar 3D
+            </button>
+          )}
+
+          {/* Contenedor de herramientas - Versión móvil (ruleta) o escritorio (flex) */}
+          <div 
+            ref={wheelContainerRef}
+            className={`${isMobile ? 'relative h-full tools-wheel-container' : 'flex flex-wrap justify-center gap-4'}`}
+          >
+            {tools.map((tool, index) => (
               <motion.div
                 key={tool.id}
                 id={`tool-${tool.id}`}
-                whileHover={{ 
+                className={`bg-white/5 backdrop-blur-sm border rounded-xl p-4 cursor-pointer ${isMobile ? 'w-[84px]' : 'w-[120px]'} flex flex-col items-center
+                  ${selectedTool === tool.id ? `border-2 shadow-lg ${isMobile ? 'tool-selected' : ''}` : 'border-gray-600 hover:border-gray-500'}
+                  ${isMobile ? 'tool-card-mobile' : ''}`}
+                style={{
+                  borderColor: selectedTool === tool.id ? tool.color : '',
+                  position: isMobile ? 'absolute' : 'relative'
+                }}
+                animate={isMobile ? {
+                  ...getToolPosition(index, tools.length, selectedToolIndex),
+                  rotateZ: 0, // Mantener orientación vertical
+                  transition: {
+                  type: "spring",
+                    stiffness: 200,
+                    damping: 20
+                  }
+                } : {}}
+                initial={isMobile ? {
+                  scale: 0,
+                  opacity: 0
+                } : false}
+                whileHover={!isMobile ? { 
                   y: -5,
                   boxShadow: `0 10px 30px -10px ${tool.color}33`,
                   borderColor: `${tool.color}66`
-                }}
+                } : {}}
                 onClick={() => handleToolClick(tool.id)}
-                className={`bg-white/5 backdrop-blur-sm border rounded-xl p-4 transition-all cursor-pointer w-[120px] flex flex-col items-center
-                  ${selectedTool === tool.id ? `border-2 shadow-lg` : 'border-gray-600 hover:border-gray-500'}`}
-                style={{borderColor: selectedTool === tool.id ? tool.color : ''}}
               >
                 <div className="p-3 bg-gray-800/30 rounded-full mb-2">
                   <Image 
@@ -857,6 +1183,16 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
               </motion.div>
             ))}
           </div>
+          
+          {/* Indicador de scroll para móviles cuando hay una herramienta seleccionada */}
+          {isMobile && selectedTool && filteredProjects.length > 0 && (
+            <motion.div 
+              className="scroll-indicator"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1, duration: 0.5 }}
+            />
+          )}
         </motion.div>
 
         {/* Lista de proyectos filtrados */}
@@ -864,11 +1200,12 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
           {filteredProjects.length > 0 ? (
             <motion.div 
               key="projects-list"
+              id="projects-container"
               initial={{ opacity: 0, height: 0, y: -20 }}
               animate={{ opacity: 1, height: "auto", y: 0 }}
               exit={{ opacity: 0, height: 0, y: -20 }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="flex flex-col gap-6 overflow-hidden"
+              className={`flex flex-col gap-6 overflow-hidden ${isMobile ? 'mt-16 projects-container-mobile' : ''}`}
               ref={projectsContainerRef}
             >
               {filteredProjects.map((project, index) => {
@@ -884,16 +1221,74 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                   hasExpandableContent = true;
                 }
                 
+                // Definición de la galería específica para el proyecto de clipping y ROI
+                const clippingRoiTripleSalidaGallery = [
+                  { title: 'Workflow General', src: '/projects/n8n/clipping-roi-triple-salida/Workflow.general.png' },
+                  { title: 'Disparador por Telegram', src: '/projects/n8n/clipping-roi-triple-salida/Disparador-telegram.png' },
+                  { title: 'Preparar Informe y Solicitar Gráficos', src: '/projects/n8n/clipping-roi-triple-salida/preparar-informe-solicitar-graficos.png' },
+                  { title: 'Triple Salida: PPT, PDF y Gmail', src: '/projects/n8n/clipping-roi-triple-salida/triplesalida-ppt-pdf-gmail.png' }
+                ];
+                
+                // Definición de la galería específica para el proyecto Pipeline Automatizado de Contenido sobre Licitaciones
+                const pipelineLicitacionesGallery = [
+                  { title: 'Workflow General', src: '/projects/n8n/generador-contenido-licitaciones/workflow-general.png' },
+                  { title: 'Prompt IA', src: '/projects/n8n/generador-contenido-licitaciones/promt-ia.png' },
+                  { title: 'Procesamiento: Enviar una a la vez al nodo IA', src: '/projects/n8n/generador-contenido-licitaciones/procesamientoenviarunaalavezalnodoia.png' },
+                  { title: 'Memoria de Agente: Evita artículos similares', src: '/projects/n8n/generador-contenido-licitaciones/flujomemoriaagenteevitaarticulossimilares.png' }
+                ];
+                
+                // Definición de la galería específica para el proyecto Reporte Diario de Consumo OpenAI vía Gmail
+                const reporteOpenAIGallery = [
+                  { title: 'Workflow Completo', src: '/projects/n8n/reporte-diario-openai/workflow-completo.png' },
+                  { title: 'Definir Fecha de Ayer', src: '/projects/n8n/reporte-diario-openai/definir-fecha-ayer.png' },
+                  { title: 'Solicitud HTTP', src: '/projects/n8n/reporte-diario-openai/solicitudhttp.png' },
+                  { title: 'Ejemplo Código JavaScript', src: '/projects/n8n/reporte-diario-openai/ejemplo-codigo-java.png' },
+                  { title: 'Nodo Gmail', src: '/projects/n8n/reporte-diario-openai/gmail-nodo-png.png' }
+                ];
+                
+                // Definición de la galería específica para el proyecto Clasificación Automática de Correos de Soporte con Gemini
+                const clasificacionCorreosGeminiGallery = [
+                  { title: 'Workflow General', src: '/projects/n8n/clasificacion-correos-gemini/workflow.general.png' },
+                  { title: 'Prompt Gemini', src: '/projects/n8n/clasificacion-correos-gemini/promt-gemini.png' },
+                  { title: 'Nodo Redireccionador', src: '/projects/n8n/clasificacion-correos-gemini/nodoredireccionador.png' },
+                  { title: 'Redireccionar y Notificar Responsable', src: '/projects/n8n/clasificacion-correos-gemini/redireccionar-notificar-respondable.png' },
+                  { title: 'Actualizar/Importar Registros en BD', src: '/projects/n8n/clasificacion-correos-gemini/actualizar-importar-registrosenbd.png' }
+                ];
+                
+                // Definición de la galería específica para el proyecto Generador Automático de Contenido sobre Licitaciones
+                const generadorArticulosLicitacionesGallery = [
+                  { title: 'Workflow General', src: '/projects/n8n/generacion-articulos-licitaciones/workflowgeneral.png' },
+                  { title: 'Prompt IA', src: '/projects/n8n/generacion-articulos-licitaciones/promt-ia.png' },
+                  { title: 'Código JavaScript 1', src: '/projects/n8n/generacion-articulos-licitaciones/codigo-java.png' },
+                  { title: 'Código JavaScript 2', src: '/projects/n8n/generacion-articulos-licitaciones/codigo-java2.png' }
+                ];
+                
+                // Definición de la galería específica para el proyecto de Power BI
+                const powerbiVisualizandoGallery = [
+                  { title: 'Portada del Informe', src: '/projects/powerbi/visualizando-rendimiento/portada.jpg.png' },
+                  { title: 'Informe General', src: '/projects/powerbi/visualizando-rendimiento/informe_general.jpg.png' },
+                  { title: 'Informe EE.UU.', src: '/projects/powerbi/visualizando-rendimiento/informe_eeuu.jpg.png' },
+                  { title: 'Modelo de Datos', src: '/projects/powerbi/visualizando-rendimiento/modelo_datos.jpg.png' }
+                ];
+                
                 return (
-                  <div className="py-4 md:py-6" key={`container-${project.title}`}>
+                  <motion.div 
+                    className="py-4 md:py-6" 
+                    key={`container-${project.title}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ 
+                      duration: 0.4, 
+                      delay: 0.1 + (index * 0.1),
+                      ease: "easeOut"
+                    }}
+                  >
                     <motion.div
                       key={project.title}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 + (index * 0.1), duration: 0.3 }}
                       whileHover={{ y: -5, boxShadow: `0 10px 30px -10px ${toolColor}33` }}
-                      className={`bg-white/5 backdrop-blur-sm border rounded-xl p-3 md:p-5 transition-all border-gray-600 hover:border-gray-500 w-[95%] mx-auto`}
+                      className={`bg-white/5 backdrop-blur-sm border rounded-xl p-3 md:p-5 transition-all border-gray-600 hover:border-gray-500 w-[70%] mx-auto`}
                       style={{ borderColor: mainToolId ? `${toolColor}66` : undefined }}
+                      layout
                     >
                       <div className="flex flex-col items-center text-center gap-1 mb-2 md:mb-3">
                         <div className="p-2 bg-gray-500/10 rounded-lg" style={{ backgroundColor: `${toolColor}22` }}>
@@ -925,14 +1320,88 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                         {/* Galería de imágenes - 25% */}
                         {project.tags.some(tag => tools.find(t => t.id === tag)?.gallery) && (
                           <div className="w-full md:w-1/4 min-h-[100px] md:min-h-[180px] flex flex-col">
-                            <h4 className="text-xs font-semibold text-white mb-1" style={{ color: toolColor }}>Galería</h4>
+                            <h4 className="text-xs font-semibold text-white mb-1 text-center" style={{ color: toolColor }}>Galería</h4>
                             <div className="flex-grow">
                               <ImageGallery 
-                                images={mainTool.gallery || []} 
+                                images={project.title === 'Visualizando el Rendimiento de Adventure Works Cycles'
+                                  ? powerbiVisualizandoGallery
+                                  : project.title === 'Generador Automático de Contenido sobre Licitaciones'
+                                    ? generadorArticulosLicitacionesGallery
+                                    : project.title === 'Clasificación Automática de Correos de Soporte con Gemini'
+                                      ? clasificacionCorreosGeminiGallery
+                                      : project.title === 'Reporte Diario de Consumo OpenAI vía Gmail'
+                                        ? reporteOpenAIGallery
+                                        : project.title === 'Pipeline Automatizado de Contenido sobre Licitaciones'
+                                          ? pipelineLicitacionesGallery
+                                          : project.title === 'SISTEMA INTEGRAL DE CLIPPING Y ROI CON TRIPLE SALIDA (HTML/PDF/PPTX)'
+                                            ? clippingRoiTripleSalidaGallery
+                                            : mainTool.gallery || []}
                                 toolColor={toolColor}
                                 onLightboxChange={handleLightboxChange}
                               />
                             </div>
+                            {/* Botón de video demo solo para la tarjeta de clipping y ROI */}
+                            {project.title === 'SISTEMA INTEGRAL DE CLIPPING Y ROI CON TRIPLE SALIDA (HTML/PDF/PPTX)' && (
+                              <div className="flex justify-center mt-2">
+                                <a
+                                  href="https://youtu.be/lDFzFftjdNo"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-4 py-1 text-xs rounded bg-opacity-20 border cursor-pointer hover:bg-opacity-30 transition-all font-semibold"
+                                  style={{
+                                    backgroundColor: `${toolColor}22`,
+                                    borderColor: `${toolColor}66`,
+                                    color: toolColor
+                                  }}
+                                >
+                                  Video demo 1
+                                </a>
+                              </div>
+                            )}
+                            {/* Botones específicos para Power BI */}
+                            {mainToolId === "powerbi" && (
+                              <div className="flex justify-center gap-4 mt-2">
+                                <button
+                                  className="px-4 py-1 text-xs rounded bg-opacity-20 border cursor-pointer hover:bg-opacity-30 transition-all"
+                                  style={{
+                                    backgroundColor: `${toolColor}22`,
+                                    borderColor: `${toolColor}66`,
+                                    color: toolColor
+                                  }}
+                                  onClick={() => window.open('https://docs.google.com/presentation/d/11SZvXxDZ1cNHuW32lHPfpq8rmusAdSFNgy_14XzcMZk/edit?usp=drive_link', '_blank')}
+                                >
+                                  Mockup
+                                </button>
+                                <button
+                                  className="px-4 py-1 text-xs rounded bg-opacity-20 border cursor-pointer hover:bg-opacity-30 transition-all"
+                                  style={{
+                                    backgroundColor: `${toolColor}22`,
+                                    borderColor: `${toolColor}66`,
+                                    color: toolColor
+                                  }}
+                                  onClick={() => window.open('https://drive.google.com/file/d/1iPM8-AlXbgjUBNPMHP5RzEm8Hi2eW8GH/view?usp=drive_link', '_blank')}
+                                >
+                                  archivo pbix
+                                </button>
+                              </div>
+                            )}
+                            
+                            {/* Botones específicos para Google Sheets */}
+                            {mainToolId === "sheets" && (
+                              <div className="flex justify-center mt-8">
+                                <button
+                                  className="px-4 py-1 text-xs rounded bg-opacity-20 border cursor-pointer hover:bg-opacity-30 transition-all"
+                                  style={{
+                                    backgroundColor: `${toolColor}22`,
+                                    borderColor: `${toolColor}66`,
+                                    color: toolColor
+                                  }}
+                                  onClick={() => window.open('https://docs.google.com/spreadsheets/d/1ET22cq7017Wgm77jxnFqNq80eXB9duQUU7XvjHlI8mk/edit?usp=sharing', '_blank')}
+                                >
+                                  Spreadsheet
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -940,8 +1409,8 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                       {/* Botón "Ver más detalles" centrado */}
                       {hasExpandableContent && (
                         <div className="w-full flex justify-center mt-2 mb-2">
-                          <button
-                            className="px-4 md:px-6 py-1.5 md:py-2.5 rounded-full font-extrabold text-xs md:text-base shadow-lg focus:outline-none tracking-wide scale-90 md:scale-60"
+                          <motion.button
+                            className="px-4 md:px-6 py-1.5 md:py-2.5 rounded-full font-extrabold text-xs md:text-base shadow-lg focus:outline-none tracking-wide scale-90 md:scale-60 cursor-pointer hover:brightness-110 transition-all"
                             style={{
                               color: '#000000',
                               background: `linear-gradient(90deg, ${toolColor}BB 10%, ${toolColor} 90%)`,
@@ -950,9 +1419,19 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                               animation: 'button-blink 1.2s infinite alternate',
                             }}
                             onClick={() => handleToggle(index)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ 
+                              duration: 0.3,
+                              type: "spring",
+                              stiffness: 300,
+                              damping: 15
+                            }}
                           >
                             {collapsedArr[index] ? 'VER MAS DETALLES' : 'OCULTAR DETALLES'}
-                          </button>
+                          </motion.button>
                           <style jsx>{`
                             @keyframes button-blink {
                               0% { filter: brightness(1.1) drop-shadow(0 0 8px ${toolColor}); }
@@ -1003,7 +1482,7 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                         })}
                       </div>
                     </motion.div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </motion.div>
