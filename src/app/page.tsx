@@ -61,7 +61,7 @@ export default function Home() {
        /* AJUSTES PARA MÓVILES */
        w-32 h-32                    /* Tamaño base en móviles (128x128px) */
        top-6                        /* Distancia desde arriba: 24px */
-       right-4                      /* Distancia desde la derecha: 16px */
+       right-2 sm:right-4           /* Mueve ligeramente a la derecha solo en móviles */
        
        /* AJUSTES PARA ESCRITORIO (lg) */
        lg:w-[700px] lg:h-[700px]   /* Tamaño en escritorio (700x700px) - Aumentar para acercar, reducir para alejar */
@@ -311,8 +311,21 @@ export default function Home() {
             <a href="https://www.linkedin.com/in/dataquintanapedro" target="_blank" rel="noopener noreferrer" className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group" aria-label="LinkedIn">
               <Linkedin className="w-5 h-5 text-gray-300 group-hover:text-cyan-400 transition-colors duration-300" />
             </a>
-            <a href="https://wa.me/5491139044027" target="_blank" rel="noopener noreferrer" className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group" aria-label="WhatsApp">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" className="w-5 h-5 text-gray-300 group-hover:text-green-400 transition-colors duration-300"><path d="M16 3C9.373 3 4 8.373 4 15c0 2.385.832 4.584 2.236 6.393L4 29l7.824-2.205C13.7 27.597 14.83 27.8 16 27.8c6.627 0 12-5.373 12-12S22.627 3 16 3zm0 22.8c-1.04 0-2.062-.162-3.03-.48l-.215-.07-4.65 1.31 1.25-4.44-.14-.22C7.13 19.13 6.2 17.13 6.2 15c0-5.42 4.38-9.8 9.8-9.8s9.8 4.38 9.8 9.8-4.38 9.8-9.8 9.8zm5.13-7.13c-.28-.14-1.65-.81-1.9-.9-.25-.09-.43-.14-.61.14-.18.28-.28.7-.9.86-1.08.16-.18.32.2.6.07.28-.14 1.18-.44 2.25-1.4 8.33-1.65 1.39-.83.74-1.39 1.65-1.55 1.93-.16.28-.02.43.12.57.12.12.28.32.46.48.14.16.18.28.28.46.09.18.05.34.02.48.07.14.61 1.47.84 2.01.22.53.45.46.61.47.16.01.34.01.52.01.18 0 .48.07.73.34.25.27.97.95.97 2.3 0 1.35.99 2.65 1.13 2.83.14.18 1.95 2.98 4.73 4.06.66.28 1.18.45 1.58.58.66.21 1.26.18 1.73.11.53-.08 1.65-.67 1.89-1.32.23-.65.23-1.2.16-1.32-.07-.12-.25-.18-.53-.32z" fill="currentColor"/></svg>
+            <a
+              href="https://wa.me/5491139044027"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group"
+              aria-label="WhatsApp"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 32 32"
+                fill="currentColor"
+                className="w-5 h-5 text-gray-300 group-hover:text-green-400 transition-colors duration-300"
+              >
+                <path d="M16 3C9.373 3 4 8.373 4 15c0 2.402.752 4.676 2.149 6.599L4 29l7.584-2.168A11.902 11.902 0 0 0 16 27c6.627 0 12-5.373 12-12S22.627 3 16 3Zm0 21.6c-1.876 0-3.705-.521-5.287-1.507l-.378-.233-4.25 1.215 1.233-4.139-.245-.392A9.597 9.597 0 0 1 6.4 15c0-5.301 4.299-9.6 9.6-9.6s9.6 4.299 9.6 9.6-4.299 9.6-9.6 9.6Zm5.243-7.193c-.288-.144-1.703-.84-1.967-.936-.264-.096-.456-.144-.648.144s-.744.936-.912 1.128c-.168.192-.336.216-.624.072-.288-.144-1.248-.456-2.376-1.44-.88-.784-1.464-1.728-1.632-2.016-.168-.288-.024-.44.12-.576.12-.12.288-.312.432-.48.144-.168.192-.288.288-.48.096-.192.048-.36-.024-.504-.072-.144-.648-1.464-.888-2.016-.24-.552-.48-.48-.648-.48h-.552c-.192 0-.504.072-.768.36-.264.288-1.032 1.008-1.032 2.448s1.08 2.856 1.224 3.048c.144.192 2.136 3.24 5.184 4.536.72.312 1.296.504 1.728.648.744.24 1.416.204 1.944.132.6-.084 1.824-.744 2.088-1.452.264-.708.264-1.308.192-1.44-.072-.132-.24-.204-.528-.348Z" />
+              </svg>
             </a>
           </div>
         </div>

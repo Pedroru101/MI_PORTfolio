@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Image from 'next/image';
 import { ThreeBackground } from '@/components/ThreeBackground';
+import { Github } from 'lucide-react';
 
 // Definición de herramientas con sus colores y descripciones
 const tools = [
@@ -1110,9 +1111,9 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                   <Image 
                     src={tool.imgSrc} 
                     alt={`${tool.name} icon`} 
-                    width={isMobileGallery ? 32 : 45} // Antes: 20. Más grande en móviles
-                    height={isMobileGallery ? 32 : 45} // Antes: 20. Más grande en móviles
-                    className={`${isMobileGallery ? 'w-8 h-8' : 'w-15 h-15'} object-contain rounded-md`} // Antes: w-5 h-5
+                    width={isMobileGallery ? 32 : 90} // Antes: 20. Más grande en móviles
+                    height={isMobileGallery ? 32 : 90} // Antes: 20. Más grande en móviles
+                    className={`${isMobileGallery ? 'w-8 h-8' : 'w-30 h-30'} object-contain rounded-md`} // Antes: w-5 h-5
                   />
                 </div>
                 <h3 className="text-xs font-medium text-white text-center">{tool.name}</h3>
@@ -1424,6 +1425,23 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
             </motion.div>
           ) : null}
         </AnimatePresence>
+      </div>
+      {/* Footer de íconos sociales, igual que en la página principal */}
+      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4 z-50">
+        <a href="https://github.com/Pedroru101" target="_blank" rel="noopener noreferrer" className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group" aria-label="GitHub">
+          {/* Usar el mismo icono que en la página principal */}
+          <Github className="w-5 h-5 text-gray-300 group-hover:text-[#F05033] transition-colors duration-300" />
+        </a>
+        <a href="https://www.linkedin.com/in/dataquintanapedro" target="_blank" rel="noopener noreferrer" className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group" aria-label="LinkedIn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-gray-300 group-hover:text-cyan-400 transition-colors duration-300">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 8a6 6 0 016 6v5a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4a1 1 0 00-2 0v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-5a6 6 0 016-6zM2 9a2 2 0 012-2h.01a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V9zm2-4a2 2 0 110-4 2 2 0 010 4z" />
+          </svg>
+        </a>
+        <a href="https://wa.me/5491139044027" target="_blank" rel="noopener noreferrer" className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group" aria-label="WhatsApp">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor" className="w-5 h-5 text-gray-300 group-hover:text-green-400 transition-colors duration-300">
+            <path d="M16 3C9.373 3 4 8.373 4 15c0 2.402.752 4.676 2.149 6.599L4 29l7.584-2.168A11.902 11.902 0 0 0 16 27c6.627 0 12-5.373 12-12S22.627 3 16 3Zm0 21.6c-1.876 0-3.705-.521-5.287-1.507l-.378-.233-4.25 1.215 1.233-4.139-.245-.392A9.597 9.597 0 0 1 6.4 15c0-5.301 4.299-9.6 9.6-9.6s9.6 4.299 9.6 9.6-4.299 9.6-9.6 9.6Zm5.243-7.193c-.288-.144-1.703-.84-1.967-.936-.264-.096-.456-.144-.648.144s-.744.936-.912 1.128c-.168.192-.336.216-.624.072-.288-.144-1.248-.456-2.376-1.44-.88-.784-1.464-1.728-1.632-2.016-.168-.288-.024-.44.12-.576.12-.12.288-.312.432-.48.144-.168.192-.288.288-.48.096-.192.048-.36-.024-.504-.072-.144-.648-1.464-.888-2.016-.24-.552-.48-.48-.648-.48h-.552c-.192 0-.504.072-.768.36-.264.288-1.032 1.008-1.032 2.448s1.08 2.856 1.224 3.048c.144.192 2.136 3.24 5.184 4.536.72.312 1.296.504 1.728.648.744.24 1.416.204 1.944.132.6-.084 1.824-.744 2.088-1.452.264-.708.264-1.308.192-1.44-.072-.132-.24-.204-.528-.348Z" />
+          </svg>
+        </a>
       </div>
     </div>
   );
