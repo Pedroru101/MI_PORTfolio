@@ -301,7 +301,8 @@
     position: relative;
     overflow: visible;
     margin: 0 auto;
-    max-width: 300px;
+    max-width: 270px;
+    left: 40px;
   }
 
   /* Contenedor de proyectos */
@@ -313,18 +314,18 @@
 
   /* Ajustar tamaño de iconos en móvil */
   .tool-card-mobile img {
-    width: 28px !important;
-    height: 28px !important;
+    width: 20px !important;
+    height: 20px !important;
   }
 
   /* Ajustar tamaño de texto en móvil */
   .tool-card-mobile h3 {
-    font-size: 0.75rem !important;
+    font-size: 0.6rem !important;
   }
 
   /* Ajustar padding en móvil */
   .tool-card-mobile {
-    padding: 0.75rem !important;
+    padding: 0.5rem !important;
   }
 }
 

@@ -64,7 +64,7 @@ const tools = [
   },
   { 
     id: "sheets", 
-    name: "Google Sheets", 
+    name: "Sheets", 
     color: "#0F9D58", 
     description: "Hojas de cálculo colaborativas con automatización para gestión de datos y reportes en tiempo real.",
     imgSrc: "/icons/google-sheets.png",
@@ -883,60 +883,55 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
   };
 
   // Calcular las posiciones de las herramientas en círculo para móviles
-  const getToolPosition = (index: number, total: number, selectedIndex: number | null): ToolPosition => {
-    if (!isMobileGallery) return {
-      x: 0,
-      y: 0,
-      scale: 1,
-      opacity: 1,
-      zIndex: 1
-    };
-
-    // Si hay una herramienta seleccionada, solo mostrar esa
-    if (selectedIndex !== null) {
-      if (index === selectedIndex) {
-        return {
-          x: 0,
-          y: 0,
-          scale: 1.2,
-          opacity: 1,
-          zIndex: 2
-        };
-      } else {
-        return {
-          x: 0,
-          y: 0,
-          scale: 0,
-          opacity: 0,
-          zIndex: 0
-        };
-      }
+  const getToolPosition = (
+    index: number,
+    total: number,
+    selectedIndex: number | null
+  ): ToolPosition => {
+    // En escritorio no aplicamos ninguna transformación especial
+    if (!isMobileGallery) {
+      return { x: 0, y: 0, scale: 1, opacity: 1, zIndex: 1 };
     }
 
-    // Calcular el ángulo para cada herramienta
-    const angle = (360 / total) * index;
-    const radius = 85; // Radio reducido para móviles
-    
-    // Offset para mover todo el conjunto hacia la derecha y abajo
-    const offsetX = 90; // Ajusta este valor para mover más a la derecha (+) o izquierda (-)
-    const offsetY = 50; // Ajusta este valor para mover más abajo (+) o arriba (-)
-    
-    // Convertir ángulo a radianes
-    const radians = (angle * Math.PI) / 180;
+    // === Ajustes personalizables para la "U" móvil ===
+    const MOBILE_U_RADIUS = 180;   // Antes: 90. Más alto para móviles
+    const MOBILE_U_SPREAD_X = 0.8; // >1 separa más los brazos
+    const MOBILE_U_OFFSET_X = 25;  // Desplazamiento global X
+    const MOBILE_U_OFFSET_Y = 170; // Antes: 100. Más abajo para móviles
 
-    // Calcular posición en el círculo
-    const centerOffsetX = -10; // Ajustar hacia la izquierda
-    const centerOffsetY = -20; // Ajustar hacia arriba
-    const x = Math.sin(radians) * radius + centerOffsetX + offsetX;
-    const y = -Math.cos(radians) * radius + centerOffsetY + offsetY;
+    // Ángulo entre 150° y 30° (brazos mirando hacia abajo)
+    const totalPositions = total - 1;
+    const norm = totalPositions === 0 ? 0.5 : index / totalPositions;
+    const angleDeg = 150 - (150 - 30) * norm;
+    const radians = (angleDeg * Math.PI) / 180;
 
-    return {
-      x,
-      y,
-      scale: 1,
-      opacity: 1,
-      zIndex: 1
-    };
+    // Coordenadas base sobre el arco superior
+    let x = Math.cos(radians) * MOBILE_U_RADIUS;
+    let y = -Math.sin(radians) * MOBILE_U_RADIUS;
+
+    x *= MOBILE_U_SPREAD_X;
+    x += MOBILE_U_OFFSET_X;
+    y += MOBILE_U_OFFSET_Y;
+
+    // --- Comportamiento cuando hay una tarjeta seleccionada ---
+    if (selectedIndex !== null) {
+      if (index === selectedIndex) {
+        // Centrar abajo de la U
+        return {
+          x: MOBILE_U_OFFSET_X,
+          y: MOBILE_U_OFFSET_Y + MOBILE_U_RADIUS * 0.001,
+          scale: 1.3,
+          opacity: 1,
+          zIndex: 2,
+        };
+      }
+
+      // Resto de tarjetas: se mantienen en su lugar con menor opacidad
+      return { x, y, scale: 1, opacity: 0.3, zIndex: 1 };
+    }
+
+    // Sin selección -> posición base
+    return { x, y, scale: 1, opacity: 1, zIndex: 1 };
   };
 
   // Función para manejar el clic en una tarjeta de herramienta
@@ -1036,7 +1031,7 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
           transition={{ delay: 0.3 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 pb-2 md:pb-0">
             Mis Proyectos
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto text-left leading-relaxed">
@@ -1084,8 +1079,8 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
               <motion.div
                 key={tool.id}
                 id={`tool-${tool.id}`}
-                className={`bg-white/5 backdrop-blur-sm border rounded-xl p-4 cursor-pointer ${isMobileGallery ? 'w-[84px]' : 'w-[120px]'} flex flex-col items-center
-                  ${selectedTool === tool.id ? `border-2 shadow-lg ${isMobileGallery ? 'tool-selected' : ''}` : 'border-gray-600 hover:border-gray-500'}
+                className={`bg-white/5 backdrop-blur-sm border rounded-xl p-2 cursor-pointer ${isMobileGallery ? 'w-[50px]' : 'w-[120px]'} flex flex-col items-center
+                  ${selectedTool === tool.id ? `border-2 shadow-lg ${isMobileGallery ? 'tool-blink' : ''}` : 'border-gray-600 hover:border-gray-500'}
                   ${isMobileGallery ? 'tool-card-mobile' : ''}`}
                 style={{
                   borderColor: selectedTool === tool.id ? tool.color : '',
@@ -1115,12 +1110,12 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                   <Image 
                     src={tool.imgSrc} 
                     alt={`${tool.name} icon`} 
-                    width={40} 
-                    height={40} 
-                    className="w-10 h-10 object-contain rounded-md" 
+                    width={isMobileGallery ? 32 : 45} // Antes: 20. Más grande en móviles
+                    height={isMobileGallery ? 32 : 45} // Antes: 20. Más grande en móviles
+                    className={`${isMobileGallery ? 'w-8 h-8' : 'w-15 h-15'} object-contain rounded-md`} // Antes: w-5 h-5
                   />
                 </div>
-                <h3 className="text-sm font-medium text-white text-center">{tool.name}</h3>
+                <h3 className="text-xs font-medium text-white text-center">{tool.name}</h3>
               </motion.div>
             ))}
           </div>
@@ -1228,7 +1223,7 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                     <motion.div
                       key={project.title}
                       whileHover={{ y: -5, boxShadow: `0 10px 30px -10px ${toolColor}33` }}
-                      className={`bg-white/5 backdrop-blur-sm border rounded-xl p-3 md:p-5 transition-all border-gray-600 hover:border-gray-500 w-[70%] mx-auto`}
+                      className={`bg-white/5 backdrop-blur-sm border rounded-xl p-3 md:p-5 transition-all border-gray-600 hover:border-gray-500 w-[98 %] mx-auto`}
                       style={{ borderColor: mainToolId ? `${toolColor}66` : undefined }}
                       layout
                     >
