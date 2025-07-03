@@ -1,11 +1,8 @@
 'use client';
 
-import { motion, AnimatePresence, TargetAndTransition } from "framer-motion";
-import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import Image from 'next/image';
-import Link from 'next/link';
-import { ArrowLeft, ExternalLink, Github, ChevronLeft, ChevronRight } from 'lucide-react';
-import dynamic from 'next/dynamic';
 import { ThreeBackground } from '@/components/ThreeBackground';
 
 // Definición de herramientas con sus colores y descripciones
@@ -112,6 +109,50 @@ function ImageGallery({ images, toolColor, onLightboxChange }: { images: {title:
     onLightboxChange(showLightbox);
   }, [showLightbox, onLightboxChange]);
 
+  // Define resetZoom function wrapped in useCallback
+  const resetZoom = useCallback(() => {
+    // Animar el reseteo del zoom para una transición más suave
+    const startZoom = zoomLevel;
+    const startPos = { ...dragPosition };
+    const startTime = performance.now();
+    const duration = 300; // duración de la animación en ms
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Función de easing para una animación más natural
+      const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
+      const easedProgress = easeOutCubic(progress);
+      
+      const currentZoom = startZoom + (100 - startZoom) * easedProgress;
+      const currentX = startPos.x * (1 - easedProgress);
+      const currentY = startPos.y * (1 - easedProgress);
+      
+      setZoomLevel(currentZoom);
+      setDragPosition({ x: currentX, y: currentY });
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setIsZoomed(false);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [zoomLevel, dragPosition]);
+
+  // Wrap closeLightbox in useCallback to prevent it from changing on every render
+  const closeLightbox = useCallback(() => {
+    setShowLightbox(false);
+    resetZoom();
+    
+    // Pequeño retraso antes de resetear el índice de imagen clickeada
+    setTimeout(() => {
+      setClickedImageIndex(null);
+    }, 300);
+  }, [resetZoom]); // Add resetZoom as dependency
+
   // Efecto para manejar clics fuera del lightbox
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -127,25 +168,8 @@ function ImageGallery({ images, toolColor, onLightboxChange }: { images: {title:
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showLightbox]);
-  
-  // Detectar si estamos en un dispositivo móvil
-  const [isMobile, setIsMobile] = useState(false);
-  
-  // Detectar dispositivo móvil al montar el componente
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkIfMobile();
-    window.addEventListener('resize', checkIfMobile);
-    
-    return () => {
-      window.removeEventListener('resize', checkIfMobile);
-    };
-  }, []);
- 
+  }, [showLightbox, closeLightbox]);
+
   // Determinar qué imágenes mostrar basado en el estado
   const visibleImages = showAllImages ? images : images.slice(0, 4);
   const hasMoreImages = images.length > 4;
@@ -190,16 +214,6 @@ function ImageGallery({ images, toolColor, onLightboxChange }: { images: {title:
         }
       }, 50); // Pequeño retraso para asegurar que los elementos están renderizados
     }, 100);
-  };
-
-  const closeLightbox = () => {
-    setShowLightbox(false);
-    resetZoom();
-    
-    // Pequeño retraso antes de resetear el índice de imagen clickeada
-    setTimeout(() => {
-      setClickedImageIndex(null);
-    }, 300);
   };
 
   const nextImage = () => {
@@ -263,38 +277,6 @@ function ImageGallery({ images, toolColor, onLightboxChange }: { images: {title:
     setZoomLevel(newZoom);
     setIsZoomed(newZoom > 100);
     setDragPosition({ x: newX, y: newY });
-  };
-
-  const resetZoom = () => {
-    // Animar el reseteo del zoom para una transición más suave
-    const startZoom = zoomLevel;
-    const startPos = { ...dragPosition };
-    const startTime = performance.now();
-    const duration = 300; // duración de la animación en ms
-
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      
-      // Función de easing para una animación más natural
-      const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
-      const easedProgress = easeOutCubic(progress);
-      
-      const currentZoom = startZoom + (100 - startZoom) * easedProgress;
-      const currentX = startPos.x * (1 - easedProgress);
-      const currentY = startPos.y * (1 - easedProgress);
-      
-      setZoomLevel(currentZoom);
-      setDragPosition({ x: currentX, y: currentY });
-      
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-    } else {
-      setIsZoomed(false);
-    }
-  };
-
-    requestAnimationFrame(animate);
   };
 
   const increaseZoom = () => {
@@ -675,7 +657,7 @@ function ImageGallery({ images, toolColor, onLightboxChange }: { images: {title:
   );
 }
 
-function ExpandableDescription({ html, collapsed, onToggle, index, toolColor }: { html: string, collapsed: boolean, onToggle: (index: number) => void, index: number, toolColor: string }) {
+function ExpandableDescription({ html, collapsed }: { html: string, collapsed: boolean }) {
   return (
     <div className="text-gray-300 text-xs md:text-sm">
       <div 
@@ -701,19 +683,6 @@ function ExpandableDescription({ html, collapsed, onToggle, index, toolColor }: 
       {/* El botón ya no se muestra aquí, se renderiza en el componente padre */}
     </div>
   );
-}
-
-// Función auxiliar para encontrar todas las ocurrencias de una subcadena
-function findAllOccurrences(str: string, subStr: string): number[] {
-  const positions: number[] = [];
-  let pos = str.indexOf(subStr);
-  
-  while (pos !== -1) {
-    positions.push(pos);
-    pos = str.indexOf(subStr, pos + 1);
-  }
-  
-  return positions;
 }
 
 interface Project {
@@ -760,7 +729,7 @@ export default function ProyectosContent() {
     },
     {
       title: "Sistema de Monitoreo de Medios para Riesgo Político",
-      description: `🧩 <b>Necesidad / Problema Inicial:</b><br/>Un alto cargo político necesita un resumen diario y automatizado de todas las noticias (prensa, radio, TV, digital) para detectar riesgos reputacionales, crisis o asuntos de interés sin tener que revisar manually cientos de fuentes. El objetivo es recibir una alerta temprana y concisa directamente en su correo para una toma de decisiones ágil.<br/><br/>🚧 <b>Retos Técnicos:</b><ul><li><b>Gestión de Grandes Volúmenes:</b> Procesar cientos de noticias diarias requirió implementar un sistema de división en lotes (SplitInBatches) para manejar los datos de forma eficiente sin sobrecargar los servicios.</li><li><b>Análisis Semántico Profundo:</b> Para entender el contexto real más allá de palabras clave, se utilizó la vectorización de texto (embeddings) con un modelo de IA local (Ollama), permitiendo un análisis de sentimiento y relevancia mucho más preciso.</li><li><b>Orquestación Multi-Agente:</b> Se diseñó una arquitectura de dos agentes de IA. El primero analiza pequeños fragmentos de noticias, y el segundo consolida esos análisis para generar un informe ejecutivo final, superando las limitaciones de contexto de los modelos de lenguaje.</li></ul><br/>⚙️ <b>Solución (Descripción del Flujo):</b><br/>El flujo se conecta a una API de medios para descargar las noticias del día. Cada noticia es procesada y convertida en un vector numérico (embedding) usando un modelo de IA local. Un primer agente de IA analiza estos vectores en lotes para una pre-evaluación. Luego, un segundo agente consolida estos análisis, genera un informe ejecutivo final y determina si existe una alerta. Finalmente, el sistema formatea este informe en un correo HTML profesional y lo envía por Gmail, con un asunto dinámico que cambia según el nivel de riesgo detectado.<br/><br/>🚀 <b>Resultados y Beneficios:</b><ul><li><b>Ahorro de Tiempo:</b> Automatiza por completo el monitoreo de medios, liberando más de 3 horas de trabajo manual al día.</li><li><b>Detección Proactiva:</b> Permite identificar riesgos y oportunidades con antelación gracias al análisis semántico, superando la simple búsqueda por palabras clave.</li><li><b>Escalabilidad:</b> El sistema está diseñado para procesar miles de noticias sin problemas gracias a la gestión por lotes y la arquitectura de IA.</li><li><b>Información Consolidada:</b> Entrega un único informe ejecutivo, eliminando el ruido informativo y permitiendo tomar decisiones rápidas y basadas en datos.</li></ul><br/>🧪 <b>Ejemplo de uso real:</b><br/>Un asesor de comunicación programa el workflow para ejecutarse cada mañana. El sistema descarga todas las menciones al "Cabildo de Gran Canaria". Si detecta una noticia sobre una protesta o una transcripción de radio con críticas a la gestión, el presidente recibe un correo a primera hora con el asunto "🚨 ¡Alerta! Riesgos detectados..." y un resumen de los puntos clave, permitiéndole preparar una respuesta antes del inicio de su jornada.`,
+      description: `🧩 <b>Necesidad / Problema Inicial:</b><br/>Un alto cargo político necesita un resumen diario y automatizado de todas las noticias (prensa, radio, TV, digital) para detectar riesgos reputacionales, crisis o asuntos de interés sin tener que revisar manually cientos de fuentes. El objetivo es recibir una alerta temprana y concisa directamente en su correo para una toma de decisiones ágil.<br/><br/>🚧 <b>Retos Técnicos:</b><ul><li><b>Gestión de Grandes Volúmenes:</b> Procesar cientos de noticias diarias requirió implementar un sistema de división en lotes (SplitInBatches) para manejar los datos de forma eficiente sin sobrecargar los servicios.</li><li><b>Análisis Semántico Profundo:</b> Para entender el contexto real más allá de palabras clave, se utilizó la vectorización de texto (embeddings) con un modelo de IA local (Ollama), permitiendo un análisis de sentimiento y relevancia mucho más preciso.</li><li><b>Orquestación Multi-Agente:</b> Se diseñó una arquitectura de dos agentes de IA. El primero analiza pequeños fragmentos de noticias, y el segundo consolida esos análisis para generar un informe ejecutivo final, superando las limitaciones de contexto de los modelos de lenguaje.</li></ul><br/>⚙️ <b>Solución (Descripción del Flujo):</b><br/>El flujo se conecta a una API de medios para descargar las noticias del día. Cada noticia es procesada y convertida en un vector numérico (embedding) usando un modelo de IA local. Un primer agente de IA analiza estos vectores en lotes para una pre-evaluación. Luego, un segundo agente consolida estos análisis, genera un informe ejecutivo final y determina si existe una alerta. Finalmente, el sistema formatea este informe en un correo HTML profesional y lo envía por Gmail, con un asunto dinámico que cambia según el nivel de riesgo detectado.<br/><br/>🚀 <b>Resultados y Beneficios:</b><ul><li><b>Ahorro de Tiempo:</b> Automatiza por completo el monitoreo de medios, liberando más de 3 horas de trabajo manual al día.</li><li><b>Detección Proactiva:</b> Permite identificar riesgos y oportunidades con antelación gracias al análisis semántico, superando la simple búsqueda por palabras clave.</li><li><b>Escalabilidad:</b> El sistema está diseñado para procesar miles de noticias sin problemas gracias a la gestión por lotes y la arquitectura de IA.</li><li><b>Información Consolidada:</b> Entrega un único informe ejecutivo, eliminando el ruido informativo y permitiendo tomar decisiones rápidas y basadas en datos concretos.</li></ul><br/>🧪 <b>Ejemplo de uso real:</b><br/>Un asesor de comunicación programa el workflow para ejecutarse cada mañana. El sistema descarga todas las menciones al "Cabildo de Gran Canaria". Si detecta una noticia sobre una protesta o una transcripción de radio con críticas a la gestión, el presidente recibe un correo a primera hora con el asunto "🚨 ¡Alerta! Riesgos detectados..." y un resumen de los puntos clave, permitiéndole preparar una respuesta antes del inicio de su jornada.`,
       tags: ["n8n", "IA", "Ollama", "API", "Automatización", "Embeddings", "JavaScript", "ngrok", "HTML", "DeepSeek-R1"],
     },
     {
@@ -811,35 +780,70 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
   ];
 
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
-  const [collapsedArr, setCollapsedArr] = useState(Array(projects.length).fill(true));
   const [isAnimating, setIsAnimating] = useState(false);
-  const [activeImageLightbox, setActiveImageLightbox] = useState<boolean>(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [gyroEnabled, setGyroEnabled] = useState(false);
   const [gyroValues, setGyroValues] = useState({ beta: 0, gamma: 0 });
+  const [activeImageLightbox, setActiveImageLightbox] = useState(false);
   const projectsContainerRef = useRef<HTMLDivElement>(null);
   const wheelContainerRef = useRef<HTMLDivElement>(null);
+  const clickCountRef = useRef(0);
   const clickOutsideTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const clickCountRef = useRef<number>(0);
-
-  // Detectar si estamos en un dispositivo móvil
+  
+  // Inicializar estado de colapso para cada proyecto
+  const [collapsedArr, setCollapsedArr] = useState<boolean[]>(projects.map(() => true));
+  
+  // Detectar si es móvil para mostrar la ruleta de herramientas
+  const [isMobileGallery, setIsMobileGallery] = useState(false);
+  
+  // Efecto para detectar tamaño de pantalla
   useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    // Verificar si estamos en el navegador
+    if (typeof window === 'undefined') return;
+    
+    // Inicializar el estado basado en el tamaño de la ventana actual
+    setIsMobileGallery(window.innerWidth < 768);
+    
+    // Función para actualizar el estado cuando cambia el tamaño de la ventana
+    const handleResize = () => {
+      setIsMobileGallery(window.innerWidth < 768);
     };
     
-    checkIfMobile();
-    window.addEventListener('resize', checkIfMobile);
+    // Agregar event listener
+    window.addEventListener('resize', handleResize);
     
+    // Limpiar event listener
     return () => {
-      window.removeEventListener('resize', checkIfMobile);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
-  // Efecto para manejar el giroscopio en dispositivos móviles
-  useEffect(() => {
-    if (!isMobile || typeof window === 'undefined') return;
+  // Manejar los eventos de orientación del dispositivo
+  const handleOrientation = useCallback((event: DeviceOrientationEvent) => {
+    if (!gyroEnabled || selectedTool) return;
 
+    const beta = event.beta || 0;  // Inclinación frontal (adelante/atrás) [-180, 180]
+    const gamma = event.gamma || 0; // Inclinación lateral (izquierda/derecha) [-90, 90]
+
+    // Limitar los valores para evitar movimientos bruscos
+    const limitedBeta = Math.max(-15, Math.min(15, beta));
+    const limitedGamma = Math.max(-15, Math.min(15, gamma));
+
+    setGyroValues({
+      beta: limitedBeta,
+      gamma: limitedGamma
+    });
+
+    // Aplicar la rotación al contenedor de la ruleta
+    if (wheelContainerRef.current) {
+      wheelContainerRef.current.style.transform = `rotateX(${-limitedBeta * 0.5}deg) rotateY(${limitedGamma * 0.5}deg)`;
+    }
+  }, [gyroEnabled, selectedTool, wheelContainerRef]);
+
+  // Efecto para habilitar el giroscopio en dispositivos móviles
+  useEffect(() => {
+    if (!isMobileGallery || typeof window === 'undefined') return;
+    
+    // Para iOS 13+, se requiere permiso explícito
     if (window.DeviceOrientationEvent && typeof window.DeviceOrientationEvent.requestPermission === 'function') {
       const enableGyro = () => {
         window.DeviceOrientationEvent.requestPermission?.()
@@ -868,7 +872,7 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
         permissionButton.removeEventListener('click', () => {});
       }
     };
-  }, [isMobile]);
+  }, [isMobileGallery, handleOrientation]);
 
   const handleToggle = (index: number) => {
     setCollapsedArr(prev => {
@@ -880,7 +884,7 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
 
   // Calcular las posiciones de las herramientas en círculo para móviles
   const getToolPosition = (index: number, total: number, selectedIndex: number | null): ToolPosition => {
-    if (!isMobile) return {
+    if (!isMobileGallery) return {
       x: 0,
       y: 0,
       scale: 1,
@@ -888,61 +892,51 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
       zIndex: 1
     };
 
-    // Radio reducido para móviles
-    const radius = 85;
+    // Si hay una herramienta seleccionada, solo mostrar esa
+    if (selectedIndex !== null) {
+      if (index === selectedIndex) {
+        return {
+          x: 0,
+          y: 0,
+          scale: 1.2,
+          opacity: 1,
+          zIndex: 2
+        };
+      } else {
+        return {
+          x: 0,
+          y: 0,
+          scale: 0,
+          opacity: 0,
+          zIndex: 0
+        };
+      }
+    }
+
+    // Calcular el ángulo para cada herramienta
+    const angle = (360 / total) * index;
+    const radius = 85; // Radio reducido para móviles
     
     // Offset para mover todo el conjunto hacia la derecha y abajo
-    const offsetX = 100; // Ajusta este valor para mover más a la derecha (+) o izquierda (-)
-    const offsetY = 60; // Ajusta este valor para mover más abajo (+) o arriba (-)
+    const offsetX = 90; // Ajusta este valor para mover más a la derecha (+) o izquierda (-)
+    const offsetY = 50; // Ajusta este valor para mover más abajo (+) o arriba (-)
     
-    // Si es la herramienta seleccionada, posicionarla abajo
-    if (selectedIndex !== null && index === selectedIndex) {
-      return {
-        x: offsetX,
-        y: radius + offsetY, // Mover más abajo la tarjeta seleccionada
-        scale: 0.9,
-        opacity: 1,
-        zIndex: 30
-      };
-    }
-    
-    // Calcular el ángulo para cada herramienta (distribuidas en semicírculo superior)
-    const angleStep = Math.PI / (total - 1);
-    const angle = angleStep * index;
-    
-    // Calcular posición en el semicírculo y aplicar offset
-    const x = radius * Math.cos(angle) + offsetX;
-    const y = -radius * Math.sin(angle) + offsetY;
-    
+    // Convertir ángulo a radianes
+    const radians = (angle * Math.PI) / 180;
+
+    // Calcular posición en el círculo
+    const centerOffsetX = -10; // Ajustar hacia la izquierda
+    const centerOffsetY = -20; // Ajustar hacia arriba
+    const x = Math.sin(radians) * radius + centerOffsetX + offsetX;
+    const y = -Math.cos(radians) * radius + centerOffsetY + offsetY;
+
     return {
       x,
       y,
-      scale: 0.6,
-      opacity: 0.7,
-      zIndex: 20
+      scale: 1,
+      opacity: 1,
+      zIndex: 1
     };
-  };
-
-  // Manejar los eventos de orientación del dispositivo
-  const handleOrientation = (event: DeviceOrientationEvent) => {
-    if (!gyroEnabled || selectedTool) return;
-
-    const beta = event.beta || 0;  // Inclinación frontal (adelante/atrás) [-180, 180]
-    const gamma = event.gamma || 0; // Inclinación lateral (izquierda/derecha) [-90, 90]
-
-    // Limitar los valores para evitar movimientos bruscos
-    const limitedBeta = Math.max(-15, Math.min(15, beta));
-    const limitedGamma = Math.max(-15, Math.min(15, gamma));
-
-    setGyroValues({
-      beta: limitedBeta,
-      gamma: limitedGamma
-    });
-
-    // Aplicar la rotación al contenedor de la ruleta
-    if (wheelContainerRef.current) {
-      wheelContainerRef.current.style.transform = `rotateX(${-limitedBeta * 0.5}deg) rotateY(${limitedGamma * 0.5}deg)`;
-    }
   };
 
   // Función para manejar el clic en una tarjeta de herramienta
@@ -972,59 +966,6 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
     }
   };
   
-  // Función para centrar la ruleta en una herramienta específica
-  const centerWheelOnTool = (toolId: string) => {
-    if (!isMobile || !wheelContainerRef.current) return;
-    
-    // Encontrar el índice de la herramienta seleccionada
-    const toolIndex = tools.findIndex(tool => tool.id === toolId);
-    if (toolIndex === -1) return;
-    
-    // Calcular el ángulo actual de la herramienta
-    const currentAngle = (360 / tools.length) * toolIndex;
-    
-    // Calcular cuánto necesitamos girar para llevar la herramienta abajo (180 grados)
-    let targetAngle = 180;
-    let rotationNeeded = targetAngle - currentAngle;
-    
-    // Asegurarnos de que siempre giramos en sentido horario (hacia la derecha)
-    while (rotationNeeded < 0) rotationNeeded += 360;
-    
-    // Añadir una vuelta completa extra para efecto visual
-    const totalRotation = rotationNeeded + 360;
-    
-    if (wheelContainerRef.current) {
-      // Animación inicial de preparación
-      wheelContainerRef.current.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
-      wheelContainerRef.current.style.transform = 'scale(0.98)';
-      
-      // Animación principal de giro
-      setTimeout(() => {
-        if (wheelContainerRef.current) {
-          wheelContainerRef.current.style.transition = 'transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
-          wheelContainerRef.current.style.transform = `rotateZ(${totalRotation}deg) scale(1)`;
-          
-          // Efecto de "peso" en la tarjeta seleccionada
-              const selectedElement = document.getElementById(`tool-${toolId}`);
-              if (selectedElement) {
-                setTimeout(() => {
-              selectedElement.classList.add('tool-heavy');
-              
-              // Desplazamiento suave al contenido
-              const projectsElement = document.getElementById('projects-container');
-              if (projectsElement) {
-                projectsElement.scrollIntoView({ 
-                  behavior: 'smooth',
-                  block: 'start'
-                });
-            }
-          }, 1500);
-          }
-        }
-      }, 200);
-    }
-  };
-
   // Función para actualizar el estado del lightbox
   const handleLightboxChange = (isOpen: boolean) => {
     setActiveImageLightbox(isOpen);
@@ -1117,13 +1058,13 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className={`mb-12 ${isMobile ? 'h-[300px] tools-wheel-container' : ''} relative`}
-          style={isMobile && !selectedTool ? {
+          className={`mb-12 ${isMobileGallery ? 'h-[300px] tools-wheel-container' : ''} relative`}
+          style={isMobileGallery && !selectedTool ? {
             transform: `rotateX(${-gyroValues.beta * 0.5}deg) rotateY(${gyroValues.gamma * 0.5}deg)`
           } : {}}
         >
           {/* Solo mantener el botón de giroscopio si es necesario */}
-          {isMobile && !gyroEnabled && typeof window !== 'undefined' && 
+          {isMobileGallery && !gyroEnabled && typeof window !== 'undefined' && 
            window.DeviceOrientationEvent && 
            typeof window.DeviceOrientationEvent.requestPermission === 'function' && (
             <button 
@@ -1137,20 +1078,20 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
           {/* Contenedor de herramientas - Versión móvil (ruleta) o escritorio (flex) */}
           <div 
             ref={wheelContainerRef}
-            className={`${isMobile ? 'relative h-full tools-wheel-container' : 'flex flex-wrap justify-center gap-4'}`}
+            className={`${isMobileGallery ? 'relative h-full tools-wheel-container' : 'flex flex-wrap justify-center gap-4'}`}
           >
             {tools.map((tool, index) => (
               <motion.div
                 key={tool.id}
                 id={`tool-${tool.id}`}
-                className={`bg-white/5 backdrop-blur-sm border rounded-xl p-4 cursor-pointer ${isMobile ? 'w-[84px]' : 'w-[120px]'} flex flex-col items-center
-                  ${selectedTool === tool.id ? `border-2 shadow-lg ${isMobile ? 'tool-selected' : ''}` : 'border-gray-600 hover:border-gray-500'}
-                  ${isMobile ? 'tool-card-mobile' : ''}`}
+                className={`bg-white/5 backdrop-blur-sm border rounded-xl p-4 cursor-pointer ${isMobileGallery ? 'w-[84px]' : 'w-[120px]'} flex flex-col items-center
+                  ${selectedTool === tool.id ? `border-2 shadow-lg ${isMobileGallery ? 'tool-selected' : ''}` : 'border-gray-600 hover:border-gray-500'}
+                  ${isMobileGallery ? 'tool-card-mobile' : ''}`}
                 style={{
                   borderColor: selectedTool === tool.id ? tool.color : '',
-                  position: isMobile ? 'absolute' : 'relative'
+                  position: isMobileGallery ? 'absolute' : 'relative'
                 }}
-                animate={isMobile ? {
+                animate={isMobileGallery ? {
                   ...getToolPosition(index, tools.length, selectedToolIndex),
                   rotateZ: 0, // Mantener orientación vertical
                   transition: {
@@ -1159,11 +1100,11 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                     damping: 20
                   }
                 } : {}}
-                initial={isMobile ? {
+                initial={isMobileGallery ? {
                   scale: 0,
                   opacity: 0
                 } : false}
-                whileHover={!isMobile ? { 
+                whileHover={!isMobileGallery ? { 
                   y: -5,
                   boxShadow: `0 10px 30px -10px ${tool.color}33`,
                   borderColor: `${tool.color}66`
@@ -1185,7 +1126,7 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
           </div>
           
           {/* Indicador de scroll para móviles cuando hay una herramienta seleccionada */}
-          {isMobile && selectedTool && filteredProjects.length > 0 && (
+          {isMobileGallery && selectedTool && filteredProjects.length > 0 && (
             <motion.div 
               className="scroll-indicator"
               initial={{ opacity: 0 }}
@@ -1205,7 +1146,7 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
               animate={{ opacity: 1, height: "auto", y: 0 }}
               exit={{ opacity: 0, height: 0, y: -20 }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
-              className={`flex flex-col gap-6 overflow-hidden ${isMobile ? 'mt-16 projects-container-mobile' : ''}`}
+              className={`flex flex-col gap-6 overflow-hidden ${isMobileGallery ? 'mt-16 projects-container-mobile' : ''}`}
               ref={projectsContainerRef}
             >
               {filteredProjects.map((project, index) => {
@@ -1273,15 +1214,16 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                 
                 return (
                   <motion.div 
-                    className="py-4 md:py-6" 
                     key={`container-${project.title}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, height: 0, y: -20 }}
+                    animate={{ opacity: 1, height: "auto", y: 0 }}
                     transition={{ 
                       duration: 0.4, 
                       delay: 0.1 + (index * 0.1),
                       ease: "easeOut"
                     }}
+                    className={`py-4 md:py-6 flex flex-col gap-6 overflow-hidden ${isMobileGallery ? 'mt-16 projects-container-mobile' : ''}`}
+                    ref={projectsContainerRef}
                   >
                     <motion.div
                       key={project.title}
@@ -1311,9 +1253,6 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                           <ExpandableDescription
                             html={project.description}
                             collapsed={collapsedArr[index]}
-                            onToggle={handleToggle}
-                            index={index}
-                            toolColor={toolColor}
                           />
                         </div>
                         
@@ -1453,16 +1392,7 @@ Un correo con asunto "No puedo acceder a la plataforma" llega a la bandeja de so
                           // Si la etiqueta es la herramienta principal, usar su color exacto
                           // Si no, usar una variación del color principal
                           if (tag !== mainToolId) {
-                            // Crear variaciones sutiles del color principal para las etiquetas relacionadas
-                            const hueOffset = (tagIndex * 10) % 40 - 20; // Variación de tono entre -20 y +20
-                            const satOffset = (tagIndex * 5) % 20 - 10;  // Variación de saturación entre -10 y +10
-                            
-                            // Convertir el color hexadecimal a HSL para poder ajustarlo
-                            const r = parseInt(baseColor.slice(1, 3), 16);
-                            const g = parseInt(baseColor.slice(3, 5), 16);
-                            const b = parseInt(baseColor.slice(5, 7), 16);
-                            
-                            // Usar el color base con ligeras variaciones
+                            // TODO: implementar variaciones de color basadas en el índice si se requiere en el futuro.
                             tagColor = baseColor;
                           }
                           

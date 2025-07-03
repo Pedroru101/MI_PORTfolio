@@ -1,13 +1,11 @@
 'use client';
 
-import { motion, useAnimation } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import {
   BarChart2,
-  Code,
   Database,
-  Cpu,
   Brain,
   Zap,
   ArrowRight,
@@ -15,7 +13,6 @@ import {
   Github,
   Linkedin,
   Lightbulb,
-  MessageSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';

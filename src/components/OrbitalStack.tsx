@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable react-hooks/rules-of-hooks */
+
 import { motion, useTime, useTransform } from 'framer-motion';
 import Image from 'next/image';
 
@@ -27,7 +29,7 @@ export default function OrbitalStack() {
             // AJUSTE MANUAL DE POSICIÓN DEL SOL:
             // El primer valor (-50% es el centro) controla el eje X (izquierda/derecha).
             // El segundo valor (-50% es el centro) controla el eje Y (arriba/abajo).
-            transform: 'translate(-58%, -58%)',
+            transform: 'translate(-76%, -86%)',
           }}
         >
           <h3 className="text-base sm:text-lg md:text-xl font-bold text-white font-orbitron">Mi Stack Tecnológico</h3>
@@ -42,7 +44,7 @@ export default function OrbitalStack() {
             [angleOffset, angleOffset + 360],
             { clamp: false }
           );
-          const radius = typeof window !== 'undefined' && window.innerWidth < 640 ? 158 : 172;
+          const radius = typeof window !== 'undefined' && window.innerWidth < 640 ? 138 : 172;
           const x = useTransform(rotate, (r) => `${radius * Math.cos(r * Math.PI / 180)}px`);
           const y = useTransform(rotate, (r) => `${radius * Math.sin(r * Math.PI / 180)}px`);
 
