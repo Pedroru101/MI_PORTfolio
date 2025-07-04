@@ -29,7 +29,7 @@ export default function OrbitalStack() {
             // AJUSTE MANUAL DE POSICIÓN DEL SOL:
             // El primer valor (-50% es el centro) controla el eje X (izquierda/derecha).
             // El segundo valor (-50% es el centro) controla el eje Y (arriba/abajo).
-            transform: 'translate(-76%, -86%)',
+            transform: 'translate(-58%, -70%)',
           }}
         >
           <h3 className="text-base sm:text-lg md:text-xl font-bold text-white font-orbitron">Mi Stack Tecnológico</h3>

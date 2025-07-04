@@ -39,9 +39,7 @@ const EarthCanvas = dynamic(() => import('@/components/Earth'), {
 export default function Home() {
   const [showCanvas, setShowCanvas] = useState(false);
   
-  // Mejorar la lógica de carga para evitar parpadeos
   useEffect(() => { 
-    // Pequeño retraso para asegurar que el componente esté listo
     const timer = setTimeout(() => {
       setShowCanvas(true);
     }, 100);
@@ -51,44 +49,27 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-grid-white/[0.03] relative overflow-hidden">
-      {/* Fondo con efecto de partículas */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-gray-950 via-black to-gray-900">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20"></div>
       </div>
 
-      {/* Planeta 3D – Contenedor Responsivo */}
       <div className="absolute z-50 pointer-events-auto cursor-pointer
-       /* AJUSTES PARA MÓVILES */
-       w-32 h-32                    /* Tamaño base en móviles (128x128px) */
-       top-6                        /* Distancia desde arriba: 24px */
-       right-2 sm:right-4           /* Mueve ligeramente a la derecha solo en móviles */
-       
-       /* AJUSTES PARA ESCRITORIO (lg) */
-       lg:w-[700px] lg:h-[700px]   /* Tamaño en escritorio (700x700px) - Aumentar para acercar, reducir para alejar */
-       lg:top-[-400px]              /* Distancia desde arriba: -400px - Valores negativos lo suben más */
-       lg:right-[-55px]             /* Distancia desde la derecha: -55px - Valores negativos lo mueven más a la derecha */
-       
-       /* AJUSTES DE OPACIDAD Y EFECTOS */
-       opacity-90                   /* Transparencia global (0-100) */
-       hover:opacity-100            /* Aumenta opacidad al pasar el mouse */
-       transition-opacity          /* Suaviza cambios de opacidad */
-       
-       /* INTERACTIVIDAD */
-       select-none                 /* Evita selección de texto al hacer clic */
-       
-       /* GUÍA DE AJUSTES:
-       1. Para mover más arriba: usa valores más negativos en lg:top-[-X] (ej: lg:top-[-500px])
-       2. Para mover más a la derecha: usa valores más negativos en lg:right-[-X] (ej: lg:right-[-100px])
-       3. Para acercar/agrandar: aumenta los valores de lg:w-[Xpx] y lg:h-[Xpx]
-       4. Para alejar/reducir: disminuye los valores de lg:w-[Xpx] y lg:h-[Xpx]
-       */
+       w-32 h-32
+       top-6
+       right-2 sm:right-4
+       lg:w-[700px] lg:h-[700px]
+       lg:top-[-400px]
+       lg:right-[-55px]
+       opacity-90
+       hover:opacity-100
+       transition-opacity
+       select-none
       ">
         {showCanvas && <EarthCanvas />}
       </div>
 
       <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-32 lg:pb-40 z-10">
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 lg:items-start">
-          {/* Columna izquierda: Foto y presentación */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -102,6 +83,7 @@ export default function Home() {
               <h2 className="text-3xl sm:text-4xl font-bold text-white font-orbitron">
                 Hola, soy Pedro Quintana
               </h2>
+              <p className="text-lg text-cyan-400 font-medium">AI & Automation Engineer</p>
               <motion.div
                 animate={{ textShadow: ['0 0 8px rgba(0, 191, 255, 0.5)', '0 0 15px rgba(138, 43, 226, 0.6)', '0 0 8px rgba(0, 191, 255, 0.5)'] }}
                 transition={{ duration: 4, repeat: Infinity, repeatType: 'reverse' }}
@@ -124,7 +106,6 @@ export default function Home() {
             </p>
           </motion.div>
 
-          {/* Columna derecha: Sobre mí */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -134,7 +115,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-white font-orbitron mb-4">Sobre mí</h2>
             <div className="text-gray-300 text-sm leading-relaxed space-y-3">
               <p>
-                Soy un <b>apasionado de la Inteligencia Artificial y la Automatización</b>; diseño soluciones que aceleran la toma de decisiones y liberan el potencial de los equipos.
+                Soy un <b>apasionado de la Inteligencia Artificial y la Automatización</b>. Mi objetivo es simple: resolver problemas complejos y liberar el potencial de los equipos a través de soluciones tecnológicas elegantes y eficientes. Disfruto cada fase del proceso, desde el diseño de la arquitectura hasta la implementación final que acelera la toma de decisiones.
               </p>
               <p>
                 Mi experiencia con <span className="font-semibold text-cyan-300">n8n</span>, <span className="font-semibold text-cyan-300">Python</span> y <span className="font-semibold text-cyan-300">Power BI</span> me permite desarrollar:
@@ -150,7 +131,6 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* Stack de Tecnologías - Centrado */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -160,7 +140,6 @@ export default function Home() {
             <OrbitalStack />
           </motion.div>
 
-          {/* Últimos Proyectos Destacados */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -169,49 +148,62 @@ export default function Home() {
           >
             <h2 className="text-2xl font-bold text-white font-orbitron mb-8 text-center">Últimos Proyectos Destacados</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Tarjeta 1: Sistema de Monitoreo de Medios (n8n) */}
-              <motion.div whileHover={{ y: -5 }} className="bg-white/5 backdrop-blur-sm border border-violet-500/20 rounded-xl p-6 hover:border-violet-400/40 transition-all">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-violet-500/10 rounded-lg">
-                    <Brain className="w-6 h-6 text-violet-400" />
+              <motion.div whileHover={{ y: -5 }} className="bg-white/5 backdrop-blur-sm border border-violet-500/20 rounded-xl p-6 hover:border-violet-400/40 transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-violet-500/10 rounded-lg">
+                      <Brain className="w-6 h-6 text-violet-400" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white">Monitoreo de Medios con IA</h3>
                   </div>
-                  <h3 className="text-lg font-bold text-white">Monitoreo de Medios con IA</h3>
+                  <p className="text-gray-300 text-sm mb-4">
+                    Workflow n8n que analiza cientos de noticias, detecta riesgos reputacionales y envía un informe ejecutivo cada mañana.
+                  </p>
+                  <div className="mt-4 p-3 bg-violet-900/20 border border-violet-500/20 rounded-lg text-xs">
+                    <p className="font-bold text-violet-300 mb-1 flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4" />Dato Curioso
+                    </p>
+                    <p className="text-gray-400">
+                      Utiliza una arquitectura <i>multi-agente</i> y embeddings generados localmente para comprender el contexto real detrás de cada titular.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-gray-300 text-sm mb-4">
-                  Workflow n8n que analiza cientos de noticias, detecta riesgos reputacionales y envía un informe ejecutivo cada mañana.
-                </p>
-                <div className="mt-4 p-3 bg-violet-900/20 border border-violet-500/20 rounded-lg text-xs">
-                  <p className="font-bold text-violet-300 mb-1 flex items-center gap-2">
-                    <Lightbulb className="w-4 h-4" />Dato Curioso
-                  </p>
-                  <p className="text-gray-400">
-                    Utiliza una arquitectura <i>multi-agente</i> y embeddings generados localmente para comprender el contexto real detrás de cada titular.
-                  </p>
+                <div class="mt-6 flex justify-center">
+                  <Button disabled className="cursor-not-allowed bg-gray-700/50 text-gray-400/80 text-xs py-2 px-4 rounded-lg">
+                    <Github className="w-4 h-4 mr-2" />
+                    GitHub (Próximamente)
+                  </Button>
                 </div>
               </motion.div>
 
-              {/* Tarjeta 2: Dashboard Power BI */}
-              <motion.div whileHover={{ y: -5 }} className="bg-white/5 backdrop-blur-sm border border-amber-500/20 rounded-xl p-6 hover:border-amber-400/40 transition-all">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-amber-500/10 rounded-lg">
-                    <BarChart2 className="w-6 h-6 text-amber-400" />
+              <motion.div whileHover={{ y: -5 }} className="bg-white/5 backdrop-blur-sm border border-amber-500/20 rounded-xl p-6 hover:border-amber-400/40 transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-amber-500/10 rounded-lg">
+                      <BarChart2 className="w-6 h-6 text-amber-400" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white">Dashboard Adventure Works</h3>
                   </div>
-                  <h3 className="text-lg font-bold text-white">Dashboard Adventure Works</h3>
+                  <p className="text-gray-300 text-sm mb-4">
+                    Informe interactivo en Power BI que revela tendencias de ventas y márgenes clave para Adventure Works Cycles en tres continentes.
+                  </p>
+                  <div className="mt-4 p-3 bg-amber-900/20 border border-amber-500/20 rounded-lg text-xs">
+                    <p className="font-bold text-amber-300 mb-1 flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4" />Dato Curioso
+                    </p>
+                    <p className="text-gray-400">
+                      El modelo DAX calcula KPIs en tiempo real sobre un esquema en estrella optimizado: 1.98&nbsp;M US$ de ingresos en segundos.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-gray-300 text-sm mb-4">
-                  Informe interactivo en Power BI que revela tendencias de ventas y márgenes clave para Adventure Works Cycles en tres continentes.
-                </p>
-                <div className="mt-4 p-3 bg-amber-900/20 border border-amber-500/20 rounded-lg text-xs">
-                  <p className="font-bold text-amber-300 mb-1 flex items-center gap-2">
-                    <Lightbulb className="w-4 h-4" />Dato Curioso
-                  </p>
-                  <p className="text-gray-400">
-                    El modelo DAX calcula KPIs en tiempo real sobre un esquema en estrella optimizado: 1.98&nbsp;M US$ de ingresos en segundos.
-                  </p>
+                <div class="mt-6 flex justify-center">
+                  <Button disabled className="cursor-not-allowed bg-gray-700/50 text-gray-400/80 text-xs py-2 px-4 rounded-lg">
+                    <Github className="w-4 h-4 mr-2" />
+                    GitHub (Próximamente)
+                  </Button>
                 </div>
               </motion.div>
 
-              {/* Tarjeta 3: Clipping & ROI Triple Salida (n8n) */}
               <motion.div whileHover={{ y: -5 }} className="bg-white/5 backdrop-blur-sm border border-violet-500/20 rounded-xl p-6 hover:border-violet-400/40 transition-all flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
@@ -232,8 +224,7 @@ export default function Home() {
                     </p>
                   </div>
                 </div>
-                {/* Enlace al video */}
-                <div className="mt-6 flex justify-center">
+                <div class="mt-6 flex justify-center">
                   <a
                     href="https://youtu.be/lDFzFftjdNo"
                     target="_blank"
@@ -248,7 +239,6 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* Botón Ver más proyectos y Sección de Contacto */}
           <div className="lg:col-span-12 text-center mt-12 flex flex-col items-center gap-8">
             <Link href="/proyectos" passHref>
               <motion.div
@@ -275,7 +265,6 @@ export default function Home() {
               </motion.div>
             </Link>
 
-            {/* Sección de Contacto */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -303,7 +292,6 @@ export default function Home() {
             </motion.div>
           </div>
 
-          {/* Sección de Redes Sociales */}
           <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4">
             <a href="https://github.com/Pedroru101" target="_blank" rel="noopener noreferrer" className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group" aria-label="GitHub">
               <Github className="w-5 h-5 text-gray-300 group-hover:text-[#F05033] transition-colors duration-300" />
@@ -333,4 +321,3 @@ export default function Home() {
     </div>
   );
 }
-
